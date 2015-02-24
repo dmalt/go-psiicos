@@ -2,31 +2,25 @@
 %% function X = IrMxNE(M, G)
 	
 	% Initialization
-	S = 50; 	% Number of sources
-	T = 25; 	% Number of samples
-	Sen = 10;	% Number of sensors
+	S = 100; 	% Number of sources
+	T = 50; 	% Number of samples
+	Sen = 25;	% Number of sensors
 
 	X_prev = zeros(S, T);	% Matrix of signal sources; 
 	X_next = zeros(S, T);	% Matrix of signal sources; 
 	w = ones(S, 1); 	% Init weights vector
 	W = eye(S); 		% Init weights matrix 
 
-	lambda = 100.; 	% Regularization parameter
+	lambda = 2; 	% Regularization parameter
 	epsilon = 1e-6;	% Dual gap threshold
 	tau = 1e-6;  	% Tolerance 
 	I = 100;		% Number of BCD iterations per MxNE iteration
-	K = 500;		% Number of MxNE iterations
-
-	G = rand(Sen, S)*100; % Gain matrix
-	Answer = zeros(S, T);
-	ix = randint(1,5, [1,S]);
-	Answer(ix,:) = rand(5, T) * 100.;
-	M = G * Answer; %rand(Sen, T); % Measurements. Should be passed from the outside
+	K = 100;%30;		% Number of MxNE iterations
 
 	for k = 1:K
 		X_prev = X_next;
 		W = inv(diag(w));
-		G = G * W;
+		G = G_orig * W;
 		l = zeros(S, 1);
 		mu = zeros(S, 1);
 		for s = 1:S
@@ -43,17 +37,21 @@
 			for s = 1:S
 				Y_prev = Y_next;
 				Y_next(s,:) = Y_prev(s,:) + mu(s) .* G(:,s)' * R;
-				Y_next(s,:) = Y_next(s,:) * (  1. - mu(s) * lambda / norm( Y_next(s,:), 2 )  );
+				if norm( Y_prev(s,:), 2 ) ~= 0
+					Y_next(s,:) = Y_next(s,:)  - Y_prev(s,:) * mu(s) * lambda / (norm( Y_prev(s,:), 2 )  );
+				% else
+					% fprintf('%d\n',s);
+				end
 				R = R - G(:,s) * ( Y_next(s,:) - Y_prev(s,:) );
 			end
 			% Should compute a dual gap here and check for the convergence 
 		end
 		X_next = W * Y_next;
 		for s = 1:S
-			w(s) = 1. / (   2. * sqrt(  norm( X_next(s,:) )  )   );
+			w(s) = 1. / (  2 * sqrt(  norm( X_next(s,:), 2 )  )   );
 		end
 		if norm(X_next - X_prev, inf) < tau
-			fprintf('breaked');
+			fprintf('breaked\n');
 			break;
 		end
 	end
@@ -62,3 +60,14 @@
 	norm(X_next, 'fro')
 	norm(Answer, 'fro')
 	norm(X_next - Answer, 'fro')
+	norm(M - G_orig * X_next, 'fro')
+	% [I,J] = size(X_next);
+	% for i = 1:I
+	% 	for j = 1:J
+	% 		if X_next(i,j) < 0.11
+	% 			X_next(i,j) = 0;
+	% 		end
+	% 	end
+	% end
+	% norm(X_next - Answer, 'fro')
+	% norm(M - G_orig * X_next, 'fro')
