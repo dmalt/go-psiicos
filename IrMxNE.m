@@ -2,20 +2,20 @@
 %% function X = IrMxNE(M, G)
 	
 	% Initialization
-	S = 100; 	% Number of sources
-	T = 50; 	% Number of samples
-	Sen = 11;	% Number of sensors
+	S = 200; 	% Number of sources
+	T = 500; 	% Number of samples
+	Sen = 20;	% Number of sensors
 
 	X_prev = zeros(S, T);	% Matrix of signal sources; 
 	X_next = zeros(S, T);	% Matrix of signal sources; 
 	w = ones(S, 1); 	% Init weights vector
 	W = eye(S); 		% Init weights matrix 
 
-	lambda = 1.1; 	% Regularization parameter
+	lambda = 1.; 	% Regularization parameter
 	epsilon = 1e-6;	% Dual gap threshold
 	tau = 1e-4;  	% Tolerance 
-	I = 1000;		% Number of BCD iterations per one MxNE iteration
-	K = 40;%30;		% Number of MxNE iterations
+	I = 2000;		% Number of BCD iterations per one MxNE iteration
+	K = 20;%30;		% Number of MxNE iterations
 
 	tic;
 	for k = 1:K
@@ -23,12 +23,10 @@
 		W = inv(diag(w));
 		G = G_orig * W;
 		l = zeros(S, 1);
-		mu = ones(S, 1);%/1000;
-		% for s = 1:S
-		l = diag(G' * G);
-		mu = 1. ./ ( 20. * l );
-		% end
-
+		mu = ones(S, 1)/1000;
+		% l = diag(G' * G);
+		% mu = 1. ./ ( 20 * l );
+	
 		Y_next = zeros(S, T);
 		Y_prev = zeros(S, T);
 		R = M;
@@ -46,7 +44,7 @@
 				R = R - G(:,s) * ( Y_next(s,:) - Y_prev(s,:) );
 
 			end
-			
+			% fprintf('delta = %g\n', norm(Y_next - Y_prev, inf))
 			if norm(Y_next - Y_prev, inf) < tau
 				fprintf('breaked BCD, it = %d, MxNE_it = %d\n', i, k);
 				break;
@@ -57,8 +55,9 @@
 		for s = 1:S
 			w(s) = 1. / (  2 * sqrt(  norm( X_next(s,:), 2 )  )   );
 		end
+		fprintf('delta_1 = %g\n', norm(X_next - X_prev, inf))
 		if norm(X_next - X_prev, inf) < tau
-			fprintf('breaked MxNE, it = %d\n', k);
+			fprintf('breaked from MxNE, it = %d\n', k);
 			break;
 		end
 	end

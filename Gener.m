@@ -1,6 +1,6 @@
-S = 100; 	% Number of sources
-T = 50; 	% Number of samples
-Sen = 11;	% Number of sensors
+S = 200; 	% Number of sources
+T = 500; 	% Number of samples
+Sen = 20;	% Number of sensors
 
 G = rand(Sen, S) ; % Gain matrix
 G_orig = G;
