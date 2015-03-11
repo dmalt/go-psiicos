@@ -3,7 +3,7 @@
 	
 	% Initialization
 	S = 200; 	% Number of sources
-	T = 500; 	% Number of samples
+	T = 50; 	% Number of samples
 	Sen = 20;	% Number of sensors
 
 	X_prev = zeros(S, T);	% Matrix of signal sources; 
@@ -11,11 +11,11 @@
 	w = ones(S, 1); 	% Init weights vector
 	W = eye(S); 		% Init weights matrix 
 
-	lambda = 1.; 	% Regularization parameter
+	lambda = 1.8; 	% Regularization parameter
 	epsilon = 1e-6;	% Dual gap threshold
-	tau = 1e-4;  	% Tolerance 
+	tau = 1e-5;  	% Tolerance 
 	I = 2000;		% Number of BCD iterations per one MxNE iteration
-	K = 20;%30;		% Number of MxNE iterations
+	K = 200;%30;	% Number of MxNE iterations
 
 	tic;
 	for k = 1:K
