@@ -1,63 +1,71 @@
 %% IrMxNE: linear regression with mixed norm regularization
 %% function X = IrMxNE(M, G)
-	
+	DEBUG = false;
+
 	% Initialization
-	S = 200; 	% Number of sources
-	T = 50; 	% Number of samples
-	Sen = 20;	% Number of sensors
+% -------------------------------------------------------------------------- %
+	Init
 
 	X_prev = zeros(S, T);	% Matrix of signal sources; 
 	X_next = zeros(S, T);	% Matrix of signal sources; 
 	w = ones(S, 1); 	% Init weights vector
 	W = eye(S); 		% Init weights matrix 
 
-	lambda = 1.8; 	% Regularization parameter
-	epsilon = 1e-6;	% Dual gap threshold
-	tau = 1e-5;  	% Tolerance 
-	I = 2000;		% Number of BCD iterations per one MxNE iteration
-	K = 200;%30;	% Number of MxNE iterations
-
+	lambda = 1.; 		% Regularization parameter
+	epsilon = 1e-6;		% Dual gap threshold
+	eta = epsilon * 2;	% Primal-dual gap  
+	tau = 1e-6;  		% Tolerance 
+	K = 30;%30;		% Number of MxNE iterations
+% --------------------------------------------------------------------------- %
 	tic;
 	for k = 1:K
 		X_prev = X_next;
-		W = inv(diag(w));
+		W = diag(w);
 		G = G_orig * W;
-		l = zeros(S, 1);
-		mu = ones(S, 1)/1000;
+		% l = zeros(S, 1);
+		
 		% l = diag(G' * G);
-		% mu = 1. ./ ( 20 * l );
-	
-		Y_next = zeros(S, T);
-		Y_prev = zeros(S, T);
-		R = M;
-		eta = epsilon * 2;
+		% mu = 1. ./  l ;
+		% for s = 1:S
+		% 	mu(s) = 1. / (  10 * G_orig(:,s)' *  G_orig(:,s)) ;
+		% end
+ %  ------------------------------------------------------------------------------ %
+			mu = ones(S, 1) / 1000;
+			X = zeros(S, T);
+			R = M;
+			A = subset(G, R, lambda, S);
+			
+			for i = 1:100
+				G_a = G(:,A);
+				X_a = X(A,:);
+				[dummy, size_A] = size(A);
 
-		for i = 1:I
+				[X_a, bcd_iter] = BCD(size_A, T, G_a, X_a, M, lambda, epsilon, k, mu, tau, DEBUG );
+				X = zeros(S,T);
+				X(A,:) = X_a;
+				R = M - G * X;
+				eta = dual_gap(M, G, X, lambda, S, R);
+				fprintf('bcd iterations = %d, eta = %f, size_A = %d\n', bcd_iter, eta, size_A);
+			
+				A_ = subset(G, R, lambda, S);
+				A_next = union(support(X), A_);
+				[dummy, size_A] = size(A);
+				[dummy, size_A_next] = size(A_next);
+				if eta < epsilon %|| isempty(setxor(A,A_next))
+					break;
+				end
+				A = A_next;
+			end
+% -------------------------------------------------------------------------------- %
+			X_next = W * X;
 			for s = 1:S
-				Y_prev = Y_next;
-				Y_next(s,:) = Y_prev(s,:) + mu(s) .* G(:,s)' * R;
-				% if norm( Y_prev(s,:), 2 ) ~= 0
-				Y_next(s,:) = Y_next(s,:)  - Y_prev(s,:) * mu(s) * lambda / (norm( Y_next(s,:), 2 )  );
-				% else
-					% fprintf('%d\n',s);
-				% end
-				R = R - G(:,s) * ( Y_next(s,:) - Y_prev(s,:) );
+				w(s) =   2 * sqrt(  norm( X_next(s,:), 2 )  ) ;
+			end
 
-			end
-			% fprintf('delta = %g\n', norm(Y_next - Y_prev, inf))
-			if norm(Y_next - Y_prev, inf) < tau
-				fprintf('breaked BCD, it = %d, MxNE_it = %d\n', i, k);
-				break;
-			end
-			% Should compute a dual gap here and check for the convergence 
-		end
-		X_next = W * Y_next;
-		for s = 1:S
-			w(s) = 1. / (  2 * sqrt(  norm( X_next(s,:), 2 )  )   );
-		end
-		fprintf('delta_1 = %g\n', norm(X_next - X_prev, inf))
+			fprintf('delta_1 = %g\n', norm(X_next - X_prev, inf));
+			
 		if norm(X_next - X_prev, inf) < tau
-			fprintf('breaked from MxNE, it = %d\n', k);
+			fprintf('breaked from irMxNE, it = %d\n', k);
 			break;
 		end
 	end
