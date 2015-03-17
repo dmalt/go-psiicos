@@ -10,7 +10,8 @@ function [eta, Fp, Fd] = dual_gap(M, G, X, lambda, S, R)
 
 	Fp = 0.5 * (norm(M - G * X, 'fro') ^ 2 )+ lambda * Sigma_groups;
 	R_ = R / max(max(tmp) / lambda, 1);
-    R_;
 	% R_ = R / max(tmp) / lambda;
-	Fd =  -0.5 * norm(R_,'fro') ^ 2  + trace(R_' * M);
+	Fd1 = 0.5 * ( norm(R_,'fro') ^ 2 );
+	Fd2 = trace(R_ * M');
+	Fd =  Fd2 - Fd1;
 	eta = Fp - Fd;

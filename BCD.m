@@ -1,5 +1,5 @@
 function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG)
-	I = 200000;			% Number of BCD iterations per one MxNE iteration
+	I = 10000;			% Number of BCD iterations per one MxNE iteration
 	Y_next = zeros(S, T);
 	R = M - G * Y_prev;
 
