@@ -14,7 +14,7 @@
 	lambda = 1.; 		% Regularization parameter
 	epsilon = 1e-6;		% Dual gap threshold
 	eta = epsilon * 2;	% Primal-dual gap  
-	tau = 1e-6;  		% Tolerance 
+	tau = 1e-3;  		% Tolerance 
 	K = 30;%30;		% Number of MxNE iterations
 % --------------------------------------------------------------------------- %
 	tic;
@@ -39,7 +39,6 @@
 				G_a = G(:,A);
 				X_a = X(A,:);
 				[dummy, size_A] = size(A);
-
 				[X_a, bcd_iter] = BCD(size_A, T, G_a, X_a, M, lambda, epsilon, k, mu, tau, DEBUG );
 				X = zeros(S,T);
 				X(A,:) = X_a;
@@ -51,7 +50,9 @@
 				A_next = union(support(X), A_);
 				[dummy, size_A] = size(A);
 				[dummy, size_A_next] = size(A_next);
-				if eta < epsilon %|| isempty(setxor(A,A_next))
+				isthesame = isempty(setxor(A,A_next));
+				if eta < epsilon || isthesame
+					fprintf('isempty = %d, eta = %f, ', isthesame, eta );
 					break;
 				end
 				A = A_next;
@@ -80,6 +81,9 @@
 	fprintf('Answer_norm: %g\n', Answer_norm);
 	fprintf('Error_norm: %g\n', Error_norm);
 	fprintf('Residual_norm: %g\n', Residual_norm);
+	if isempty(setxor(support(X_next),support(Answer) ))
+		fprintf('Hooray, we`ve found all the sources\n');
+	end
 	% [I,J] = size(X_next);
 	% for i = 1:I
 	% 	for j = 1:J

@@ -1,4 +1,4 @@
-S = 200; 	% Number of sources
+S = 500; 	% Number of sources
 T = 50; 	% Number of samples
 Sen = 20;	% Number of sensors
-test_set_size = 5;
+test_set_size = 7;

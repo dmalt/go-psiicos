@@ -12,5 +12,5 @@ function [eta, Fp, Fd] = dual_gap(M, G, X, lambda, S, R)
 	R_ = R / max(max(tmp) / lambda, 1);
     R_;
 	% R_ = R / max(tmp) / lambda;
-	Fd =  -0.5 * norm(R_,'fro')  + trace(R_' * M);
+	Fd =  -0.5 * norm(R_,'fro') ^ 2  + trace(R_' * M);
 	eta = Fp - Fd;

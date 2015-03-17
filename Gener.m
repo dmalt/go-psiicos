@@ -1,4 +1,4 @@
-Init
+Init % Initialization procedure, where we set matrix dimensions
 
 G = rand(Sen, S) ; % Gain matrix
 G_orig = G;
