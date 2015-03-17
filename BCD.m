@@ -6,7 +6,7 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG
 	for i = 1:I
 		for s = 1:S
 			
-			Y_next(s,:) = Y_prev(s,:) + mu(s) .* G(:,s)' *	(M - G * Y_prev);
+			Y_next(s,:) = Y_prev(s,:) + mu(s) .* G(:,s)' *	R;
 			% if norm( Y_prev(s,:), 2 ) ~= 0
 			Y_next(s,:) = Y_next(s,:) * max(1 -  mu(s) * lambda / (norm( Y_next(s,:), 'fro' )  ), 0);
 			% else
