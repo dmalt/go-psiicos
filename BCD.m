@@ -1,6 +1,6 @@
 function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG)
 	I = 10000;			% Number of BCD iterations per one MxNE iteration
-	Y_next = zeros(S, T);
+	Y_next = Y_prev;
 	R = M - G * Y_prev;
 
 	for i = 1:I
@@ -13,7 +13,7 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG
 				% fprintf('%d\n',s);
 			% end
 			
-			R = R - G * ( Y_next - Y_prev );%G(:,s) * ( Y_next(s,:) - Y_prev(s,:) );
+			R = R - G(:,s) * ( Y_next(s,:) - Y_prev(s,:) );
 			Y_prev = Y_next;
 		end
 
