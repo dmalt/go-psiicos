@@ -27,10 +27,10 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG
 		% end
 		% Should compute a dual gap here and check for the convergence
 % ------------------------------------------------------------------------------------ %
-		[eta, Fp, Fd]  = dual_gap(M, G, Y_next, lambda, S, R);
+		eta  = dual_gap(M, G, Y_next, lambda, S, R);
 % ------------------------------------------------------------------------------------ %
 		if DEBUG == true
-			fprintf('bcd iter = %d, k = %d, eta = %f, Fp = %f, Fd = %f\n', i, k, eta, Fp, Fd);
+			fprintf('bcd iter = %d, k = %d, eta = %f\n', i, k, eta);
 		end
 
 
