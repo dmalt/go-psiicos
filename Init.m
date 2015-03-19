@@ -1,4 +1,5 @@
-S = 1000; 	% Number of sources
+S = 4000; 	% Number of sources
 T = 200; 	% Number of samples
 Sen = 100;	% Number of sensors
-test_set_size = 20;
+SNR = 10;	% Signal to noise ratio
+test_set_size = 10;

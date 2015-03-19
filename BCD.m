@@ -1,5 +1,5 @@
 function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG)
-	I = 100000;			% Number of BCD iterations per one MxNE iteration
+	I = 20000;			% Number of BCD iterations per one MxNE iteration
 	Y_next = Y_prev;
 	R = M - G * Y_prev;
 
@@ -31,7 +31,7 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG
 		if eta < epsilon
 			fprintf('breaked BCD, dual it = %d, MxNE_it = %d\n', i, k);
 			break;
-		elseif eta > 1e5
+		elseif eta > 1e8
 			fprintf('BCD ERROR: diverged!!\n');
 			mu = mu /10;
 			% break;
