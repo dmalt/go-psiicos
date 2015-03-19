@@ -1,6 +1,6 @@
 %% IrMxNE: linear regression with mixed norm regularization
 %% function X = IrMxNE(M, G)
-	DEBUG = false;
+	DEBUG = true;
 
 	% Initialization
 % -------------------------------------------------------------------------- %
@@ -12,9 +12,9 @@
 	W = eye(S); 		% Init weights matrix 
 
 	lambda = 1.; 		% Regularization parameter
-	epsilon = 1e-6;		% Dual gap threshold
+	epsilon = 1e-5;		% Dual gap threshold
 	eta = epsilon * 2;	% Primal-dual gap  
-	tau = 1e-3;  		% Tolerance 
+	tau = 1e-4;  		% Tolerance 
 	K = 30;%30;		% Number of MxNE iterations
 % --------------------------------------------------------------------------- %
 	tic;
@@ -22,15 +22,13 @@
 		X_prev = X_next;
 		W = diag(w);
 		G = G_orig * W;
-		% l = zeros(S, 1);
-		
-		% l = diag(G' * G);
-		% mu = 1. ./  l ;
-		% for s = 1:S
-		% 	mu(s) = 1. / (  10 * G_orig(:,s)' *  G_orig(:,s)) ;
-		% end
+		l = zeros(S, 1);
+		% figure; image(G*100);
+		l = diag(G' * G);
+		mu = ones(size(l))/max(l);
+		% mu(support(l)) = 1. ./  (5*l(support(l)));
  %  ------------------------------------------------------------------------------ %
-			mu = ones(S, 1) / 1000;
+			% mu = ones(S, 1) / 1000;
 			X = zeros(S, T);
 			R = M;
 			A = subset(G, R, lambda, S);
