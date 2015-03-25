@@ -11,11 +11,11 @@
 	w = ones(S, 1); 	% Init weights vector
 	W = eye(S); 		% Init weights matrix 
 
-	lambda = 170.; 		% Regularization parameter
+	lambda = 80.; 		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = epsilon * 2;	% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
-	K = 30;%30;		% Number of MxNE iterations
+	K = 50;%30;			% Number of MxNE iterations
 % --------------------------------------------------------------------------- %
 	tic;
 	for k = 1:K
@@ -79,7 +79,7 @@
 	fprintf('Answer_norm: %g\n', Answer_norm);
 	fprintf('Error_norm: %g\n', Error_norm);
 	fprintf('Residual_norm: %g\n', Residual_norm);
-	F1 = 2 * length( intersect(support(X_next), ix ) ) / (length(support(X_next)) + length(ix));
+	F1 = 2 * length( intersect(support(X_next), support(Answer) ) ) / (length(support(X_next)) + length(support(Answer)));
 	fprintf('F1 =  %f\n', F1 );
 	if isempty(setxor(support(X_next),ix))
 		fprintf('Hooray, we`ve found all the sources\n');
