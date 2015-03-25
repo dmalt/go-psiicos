@@ -68,28 +68,10 @@ for phi = PHI
     end;
     %% Calculate band cross-spectral matrix 
     CrossSpecTime{it} = CrossSpectralTimeseries(X1);
-    C{it} = reshape(mean(CrossSpecTime{it},2),Nch,Nch);
-
-    
+    C{it} = reshape(mean(CrossSpecTime{it},2),Nch,Nch); 
     
     % %% Experiment with different methods
-    % [Qpsiicos{it}, IND{it}, Cp{it} ] = PSIICOS( C{it}, G2dU);
-    % [SPCpsiicos{it}, TPRpsiicos{it}] = GenerateROC(Qpsiicos{it},0.015,R, IND{it}, 100,XYZGen,NetworkPairIndex{2});
-    % [Qdics{it}, Psdics{it}, IND{it}] = iDICS(C{it},G2dU);
-    % [SPCdics{it}, TPRdics{it}] = GenerateROC(Qdics{it},0.015,R, IND{it}, 100,XYZGen,NetworkPairIndex{2});
+    [Qpsiicos{it}, IND{it}, Cp{it} ] = PSIICOS( C{it}, G2dU);
     it = it+1;
 end;
-% %% Make a figure
-% Labels = {'k.-','b.-','ro-','bo-','m.'};
-% figure
-% for it = 1:length(PHI)
-%     plot(1-SPCpsiicos{it},TPRpsiicos{it},Labels{it*length(PHI)-1});
-%     hold on;
-%     plot(1-SPCdics{it},TPRdics{it},Labels{it*length(PHI)});
-% end
-% axis([0 0.01 0 1.1])
-% grid
-% legend('SPIICOS, phi = pi/10','iDICS, phi = pi/10', 'SPIICOS, phi = pi/2','iDICS, phi = pi/2');
-% xlabel('1-speciicity');
-% ylabel('sensitivity');
 return;
