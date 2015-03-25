@@ -1,15 +1,16 @@
-%% IrMxNE: linear regression with mixed norm regularization
-%% function X = IrMxNE(M, G)
+%% IrMxNE: linear regression with mixed norm regularization; M - measurements, G_small - forward model matrix in physical space
+function X = IrMxNE(M, G_small)
 	DEBUG = true;
 
 	% Initialization
 % -------------------------------------------------------------------------- %
-	Init
+	[Nch , T] = size(M); % Nch - number of channels, T - number of time samples
+	[Nch_small, Nsrc_small] = size(G_small);
+	Nsrc = Nsrc_small ^ 2;
 
-	X_prev = zeros(S, T);	% Matrix of signal sources; 
-	X_next = zeros(S, T);	% Matrix of signal sources; 
-	w = ones(S, 1); 	% Init weights vector
-	W = eye(S); 		% Init weights matrix 
+	X_prev = zeros(Nsrc, T);	% Matrix of signal sources; 
+	X_next = zeros(Nsrc, T);	% Matrix of signal sources; 
+	w = ones(Nsrc, 1); 	% Init weights vector
 
 	lambda = 80.; 		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
@@ -20,46 +21,49 @@
 	tic;
 	for k = 1:K
 		X_prev = X_next;
-		W = diag(w);
-		G = G_orig * W;
-		l = zeros(S, 1);
+		l = zeros(Nsrc, 1);
 		% figure; image(G*100);
-		l = diag(G' * G);
-		mu = ones(size(l))/max(l);
+		% l = diag(G' * G);				% !!!! FIX THIS !!!! 
+		mu = ones(size(l))/max(l);		% !!!! FIX THIS !!!!
 		% mu(support(l)) = 1. ./  (5*l(support(l)));
  %  ------------------------------------------------------------------------------ %
-			% mu = ones(S, 1) / 1000;
-			X = zeros(S, T);
+			% mu = ones(Nsrc, 1) / 1000;
+			% X = zeros(Nsrc, T);
 			R = M;
-			A = subset(G, R, lambda, S);
-			
+			A = ActiveSet(G_small, R, lambda);
+			A_reduced = [];
+			X_a = zeros(A, T);
+			X_a_reduced = X_a;
 			for i = 1:100
-				G_a = G(:,A);
-				X_a = X(A,:);
+				G_a = CalcG(A, G_small, w);
+				[dummy, sizeA] = size(A);
+				X_a = zeros(A, T);
+				[dummy, nonzero_idx] = intersect(A, A_reduced);
+				X_a(nonzero_idx, :) =  X_a_reduced;
 				[dummy, size_A] = size(A);
 				[X_a, bcd_iter] = BCD(size_A, T, G_a, X_a, M, lambda, epsilon, k, mu, tau, DEBUG );
-				X = zeros(S,T);
-				X(A,:) = X_a;
-				R = M - G * X;
-				eta = dual_gap(M, G, X, lambda, S, R);
+				% X = zeros(Nsrc,T);
+				A_reduced = A(1, support(X_a));
+				X_a_reduced = X_a(support(X_a),:)
+				R = M - G_a * X_a;
+				% eta = dual_gap(M, G, X, lambda, Nsrc, R);
 				fprintf('bcd iterations = %d, eta = %f, size_A = %d\n', bcd_iter, eta, size_A);
 			
-				A_ = subset(G, R, lambda, S);
-				A_next = union(support(X), A_);
-				[dummy, size_A] = size(A);
-				[dummy, size_A_next] = size(A_next);
-				isthesame = isempty(setxor(A,A_next));
-				if eta < epsilon || isthesame
+				A_penalized = ActiveSet(G_small, R, lambda);
+				A_next = sort(union(A_reduced, A_penalized));
+				isthesame = isempty(setxor(A, A_next));
+				if isthesame
 					fprintf('isempty = %d, eta = %f, ', isthesame, eta );
 					break;
 				end
 				A = A_next;
 			end
 % -------------------------------------------------------------------------------- %
-			X_next = W * X;
-			for s = 1:S
-				w(s) =   2 * sqrt(  norm( X_next(s,:), 2 )  ) ;
-			end
+			X_next = W * X; % !!!!!!!!!!!!!!!!!!!!!!! FIX THIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			% for s = 1:Nsrc
+			% 	w(s) =   2 * sqrt(  norm( X_next(s,:), 2 )  ) ;
+			% end
+			w = 2 * sqrt(diag(X_next * X_next'));
 
 			fprintf('delta_1 = %g\n', norm(X_next - X_prev, inf));
 			
