@@ -26,7 +26,7 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG
 		
 
 		if mod(i,5000) == 0 
-				mu = mu /2;
+				mu = mu / 2;
 		end
 		if eta < epsilon
 			fprintf('breaked BCD, dual it = %d, MxNE_it = %d\n', i, k);

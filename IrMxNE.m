@@ -22,14 +22,15 @@ function X = IrMxNE(M, G_small)
 % --------------------------------------------------------------------------- %
 	tic;
 	for k = 1:K
-		X_prev = X_next;
-		l = zeros(Nsrc, 1);
+		% X_prev = X_next;
+		% l = zeros(Nsrc, 1);
 		% figure; image(G*100);
-		l(Nsrc) = 0
+		l(Nsrc) = 0;
 		for s = 1:Nsrc
 			l(s) = sum(columnG(s, G_small,w).^2);		
 		end
 		mu = 1./max(l);	
+		fprintf('mu = %f\n', mu);
 		% mu(support(l)) = 1. ./  (5*l(support(l)));
  %  ------------------------------------------------------------------------------ %
 		% mu = ones(Nsrc, 1) / 1000;
