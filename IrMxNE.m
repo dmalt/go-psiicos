@@ -11,7 +11,7 @@
 	w = ones(S, 1); 	% Init weights vector
 	W = eye(S); 		% Init weights matrix 
 
-	lambda = 80.; 		% Regularization parameter
+	lambda = 800.; 		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = epsilon * 2;	% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
@@ -22,10 +22,12 @@
 		X_prev = X_next;
 		W = diag(w);
 		G = G_orig * W;
-		l = zeros(S, 1);
+		l(S) = 0;
 		% figure; image(G*100);
+		fprintf('Calculating l...\n');
 		l = diag(G' * G);
-		mu = ones(size(l))/max(l);
+		mu = 1/max(l);
+		fprintf('Done.\n');
 		% mu(support(l)) = 1. ./  (5*l(support(l)));
  %  ------------------------------------------------------------------------------ %
 			% mu = ones(S, 1) / 1000;
