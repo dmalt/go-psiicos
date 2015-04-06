@@ -1,4 +1,5 @@
 #include "mex.h"
+#include <cblas.h>
 
 void columnG_fast(mwSize p, double * G_small, double * w, mwSize Nsen, mwSize Nsrc, double * G_col);
 void calc_violations(double * G_small, double * w, mwSize Nsen, mwSize Nsrc, double lambda, double * R, mwSize T, double * violations);
