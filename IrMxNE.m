@@ -1,22 +1,25 @@
 %% IrMxNE: linear regression with mixed norm regularization; M - measurements, G_small - forward model matrix in physical space
-function X = IrMxNE(M, G_small)
+% function X = IrMxNE(M, G_small)
 	DEBUG = true;
 
 	% Initialization
 % -------------------------------------------------------------------------- %
-	[Nch , T] = size(M); % Nch - number of channels, T - number of time samples
+	M_real = [real(M); imag(M)];
+	G_small = G2dU;
+	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
 	[Nch_small, Nsrc_small] = size(G_small);
-	Nsrc = Nsrc_small ^ 2;
+	Nsrc = 2 * Nsrc_small ^ 2; % Because we want to get real instead of dealing with a complex space
 
-	X_prev_active = [];	% Matrix of signal sources; !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	X_next_active = [];	% Matrix of signal sources; !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	X_prev_active = [];	% Matrix of signal sources; 
+	X_next_active = [];	% Matrix of signal sources; 
 	suppX_next = [];
 	suppX_prev = [];
 	w = ones(Nsrc, 1); 	% Init weights vector
 
-	lambda = 80.; 		% Regularization parameter
+	lambda = 200.; 		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
-	eta = epsilon * 2;	% Primal-dual gap  
+	eta = 2;	% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
 	K = 50;%30;			% Number of MxNE iterations
 % --------------------------------------------------------------------------- %
@@ -25,18 +28,23 @@ function X = IrMxNE(M, G_small)
 		% X_prev = X_next;
 		% l = zeros(Nsrc, 1);
 		% figure; image(G*100);
+		matlabpool('open', 4);
 		l(Nsrc) = 0;
 		for s = 1:Nsrc
-			l(s) = sum(columnG(s, G_small,w).^2);		
+			l(s) = sum(columnG_fast(s, G_small, w).^2);
 		end
-		mu = 1./max(l);	
-		fprintf('mu = %f\n', mu);
+		fprintf('Calculating max l(s)...');
+		mu = 1 / max(l);
+		fprintf('Done.\n');	
+		fprintf('mu = %f\n', mu );
+		matlabpool close;
 		% mu(support(l)) = 1. ./  (5*l(support(l)));
  %  ------------------------------------------------------------------------------ %
 		% mu = ones(Nsrc, 1) / 1000;
 		% X = zeros(Nsrc, T);
-		R = M;
-		A = ActiveSet(G_small, R, lambda, w);
+		R = M_real;
+		
+		A = ActiveSet(G_small, R, lambda, w, k);
 		A_reduced = [];
 		X_a_reduced = [];
 		for i = 1:100
@@ -44,16 +52,18 @@ function X = IrMxNE(M, G_small)
 			[dummy, sizeA] = size(A); 
 			X_a = zeros(sizeA, T);
 			[dummy, nonzero_idx] = intersect(A, A_reduced);
-			X_a(nonzero_idx, :) =  X_a_reduced;	
-			[X_a, bcd_iter] = BCD(size_A, T, G_a, X_a, M, lambda, epsilon, k, mu, tau, DEBUG );
+			if ~isempty(nonzero_idx)
+				X_a(nonzero_idx, :) =  X_a_reduced;	
+			end
+			[X_a, bcd_iter] = BCD(sizeA, T, G_a, X_a, M_real, lambda, epsilon, k, mu, tau, DEBUG );
 			% X = zeros(Nsrc,T);
 			A_reduced = A(1, support(X_a));
-			X_a_reduced = X_a(support(X_a),:)
-			R = M - G_a * X_a;
-			% eta = dual_gap(M, G, X, lambda, Nsrc, R);
-			fprintf('bcd iterations = %d, eta = %f, size_A = %d\n', bcd_iter, eta, size_A);
+			X_a_reduced = X_a(support(X_a),:);
+			R = M_real - G_a * X_a;
+			% eta = dual_gap(M_real, G, X, lambda, Nsrc, R);
+			fprintf('bcd iterations = %d, eta = %f, size_A = %d\n', bcd_iter, eta, sizeA);
 		
-			A_penalized = ActiveSet(G_small, R, lambda);
+			A_penalized = ActiveSet(G_small, R, lambda, w, k);
 			A_next = sort(union(A_reduced, A_penalized));
 			isthesame = isempty(setxor(A, A_next));
 			if isthesame
@@ -64,7 +74,7 @@ function X = IrMxNE(M, G_small)
 		end
 % ------------------------------------------------------------------------------------------ %
 		suppX_next = A_reduced;
-		X_next_active = w(suppX_next,1) .* X_a_reduced; 
+		X_next_active = diag(w(suppX_next,1)) * X_a_reduced; 
 		% for s = 1:Nsrc
 		% 	w(s) =   2 * sqrt(  norm( X_next(s,:), 2 )  ) ;
 		% end
@@ -77,8 +87,12 @@ function X = IrMxNE(M, G_small)
 		X_prev_exp = zeros(sizeSuppUnion,T);
 		[dummy, nonzero_idx_next] = intersect(suppUnion, suppX_next);
 		[dummy, nonzero_idx_prev] = intersect(suppUnion, suppX_prev);
-		X_next_exp(nonzero_idx_next,:) = X_next_active;
-		X_prev_exp(nonzero_idx_prev,:) = X_prev_active;
+		if ~isempty(nonzero_idx_next)
+			X_next_exp(nonzero_idx_next,:) = X_next_active;
+		end
+		if ~isempty(nonzero_idx_prev)
+			X_prev_exp(nonzero_idx_prev,:) = X_prev_active;
+		end
 		fprintf('delta_1 = %g\n', norm(X_next_exp - X_prev_exp, inf));
 	
 		if norm(X_next_exp - X_prev_exp, inf) < tau
@@ -92,19 +106,6 @@ function X = IrMxNE(M, G_small)
 	elapsed = toc;
 	fprintf('TIC TOC: %g\n', elapsed);
 			% Should compute dual gap here and check for convergence 
-	Result_norm = norm(X_next, 'fro');
-	Answer_norm = norm(Answer, 'fro');
-	Error_norm = norm(X_next - Answer, 'fro');
-	Residual_norm = norm(M - G_orig * X_next, 'fro');
-	fprintf('Result_norm: %g\n', Result_norm);
-	fprintf('Answer_norm: %g\n', Answer_norm);
-	fprintf('Error_norm: %g\n', Error_norm);
-	fprintf('Residual_norm: %g\n', Residual_norm);
-	F1 = 2 * length( intersect(support(X_next), support(Answer) ) ) / (length(support(X_next)) + length(support(Answer)));
-	fprintf('F1 =  %f\n', F1 );
-	if isempty(setxor(support(X_next),ix))
-		fprintf('Hooray, we`ve found all the sources\n');
-	end
 	% [I,J] = size(X_next);
 	% for i = 1:I
 	% 	for j = 1:J
@@ -114,4 +115,4 @@ function X = IrMxNE(M, G_small)
 	% 	end
 	% end
 	% norm(X_next - Answer, 'fro')
-	% norm(M - G_orig * X_next, 'fro')
+	% norm(M_real - G_orig * X_next, 'fro')
