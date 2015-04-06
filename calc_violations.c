@@ -3,7 +3,6 @@
 
 void columnG_fast(mwSize p, double * G_small, double * w, mwSize Nsen, mwSize Nsrc, double * G_col);
 void calc_violations(double * G_small, double * w, mwSize Nsen, mwSize Nsrc, double lambda, double * R, mwSize T, double * violations);
-double calc_product_norm(double * col, double * R, mwSize Sn, mwSize T);
 
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -19,7 +18,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  	mwSize T = mxGetN(prhs[3]);
 
  	double * violations;
- 	plhs[0] = mxCreateDoubleMatrix(Nsrc * Nsrc * 2, 1, mxREAL);
+ 	plhs[0] = mxCreateDoubleMatrix(100, 1, mxREAL);
 	violations = mxGetPr(plhs[0]);
 	calc_violations(G_small, w, Nsen, Nsrc, lambda, R, T, violations);
 }
@@ -29,12 +28,15 @@ void calc_violations(double * G_small, double * w, mwSize Nsen, mwSize Nsrc, dou
 	mwSize Sr = Nsrc * Nsrc * 2;
 	mwSize Sn = Nsen * Nsen * 2; /* Number of elements in a column */
 	mwSize s;
-	double * column = mxGetPr(mxCreateDoubleMatrix(Sn,1,mxREAL));
+	double * column = mxGetPr(mxCreateDoubleMatrix(Sn, 1, mxREAL));
+	double * result = mxGetPr(mxCreateDoubleMatrix(T, 1, mxREAL));
+	double * RtimeMat = mxGetPr(mxCreateDoubleMatrix(10, 1, mxREAL));
 	double norm = 0.;
-	for (s = 0; s < 1e6; ++s)
+	for (s = 0; s < 100; ++s)
 	{
 		columnG_fast(s+1, G_small, w, Nsen, Nsrc, column);
-		norm = calc_product_norm(column, R, Sn, T);
+		cblas_dgemv(102, 111, T, Sn, 1, R, T, column, 1, 0., result, 1);
+		norm = cblas_dnrm2(T, result, 1);
 		violations[s] = norm - lambda;
 		/*if(!(s % 10000))
 			mexPrintf("s = %d\n", s);*/
@@ -42,22 +44,7 @@ void calc_violations(double * G_small, double * w, mwSize Nsen, mwSize Nsrc, dou
 /*	mxDestroyArray(column);
 */}
 
-double calc_product_norm(double * col, double * R, mwSize Sn, mwSize T)
-{
-	double * product = mxGetPr(mxCreateDoubleMatrix(T,1,mxREAL));
-	mwSize t, sn;
-	double norm = 0;
-	for (t = 0; t < 1; ++t)
-	{
-		product[t] = 0;
-		for (sn = 0; sn < Sn; ++sn)
-			product[t] += col[sn] * R[sn + Sn * t];
-		norm += product[t] * product[t];
-	}
-	/*mxDestroyArray(product);*/
-	norm = sqrt(norm);
-	return norm;
-}
+
 
 void columnG_fast(mwSize p, double * G_small, double * w, mwSize Nsen, mwSize Nsrc, double * G_col)
 {
