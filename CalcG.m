@@ -2,5 +2,5 @@
 function [subG] = CalcG(idx, G_small, w)
 	subG = [];
 	for i = idx
-		subG = [subG, columnG(i, G_small, w)];
+		subG = [subG, columnG_fast(i, G_small, w)];
 	end
