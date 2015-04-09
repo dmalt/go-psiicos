@@ -12,12 +12,15 @@ function A = ActiveSet(G_small, R, lambda, w, k)
 	end
 
 
-	matlabpool('open', 4);
-	src_violations(S) = 0; % Memory allocation. 
-	parfor s = 1:S
-		src_violations(s)  = norm(columnG_fast(idx(s),G_small, w)' * R) - lambda;
-	end	
-	matlabpool close;
+	% matlabpool('open', 4);
+	% src_violations(S) = 0; % Memory allocation. 
+	% parfor s = 1:S
+	% 	src_violations(s)  = norm(columnG_fast(idx(s),G_small, w)' * R) - lambda;
+	% end	
+	% matlabpool close;
+	save G_small.txt G_small -ASCII
+	save R.txt R -ASCII
+	save w.txt w -ASCII
 	[Dummy, A] =  sort(src_violations, 'descend');
 	if V < S
 		A = A(1:V);

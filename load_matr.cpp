@@ -60,34 +60,53 @@ int main()
     
 
     // read the file
-    std::ifstream G_smalls("G_small.txt");
-    std::ifstream ws("w.txt");
+    std::ifstream Gs("G_small.txt");
+    std::ifstream Ws("w.txt");
     std::ifstream Rs("R.txt");
 
-    // load the matrix
-    std::vector< std::vector<double> > G_small;
-    std::vector< std::vector<double> > w;
-    std::vector< std::vector<double> > R;
-    load_matrix(&G_smalls, &G_small);
-    load_matrix(&Rs, &R);
-    load_matrix(&ws, &w);
-    int Src = G_small[0].size(), Ch = G_small.size();
+    // load matrices and sizes
+    std::vector< std::vector<double> > G_v;
+    std::vector< std::vector<double> > W_v;
+    std::vector< std::vector<double> > R_v;
+    load_matrix(&Gs, &G_v);
+    load_matrix(&Rs, &R_v);
+    load_matrix(&Ws, &W_v);
+    int Src = G_v[0].size();
+    int Ch = G_v.size();
     long int Nsrc = 2 * Src * Src;
     int Nch = 2 * Ch* Ch;
-    int T = R[0].size();
+    int T = R_v[0].size();
+    // ---------------------- //
+
+    // Iitialize Eigen matrices //
+    MatrixXd G(Ch, Src);
+    for (int i = 0; i < Ch; i++)
+        G.row(i) = VectorXd::Map(&G_v[i][0], Src);
+
+    MatrixXd R(Nch, T);
+    for (int i = 0; i < Nch; i++)
+        R.row(i) = VectorXd::Map(&R_v[i][0], T);
+
+    VectorXd W(Nsrc);
+    for (int i = 0; i < Nsrc; i++)
+        W(i) = W_v[i][0];
+    // ------------------------ //
+
+    // cout << G << endl;
+    cout << W << endl;
     // print out the matrix
 
     // cout << "The matrix is:" << endl;
-    // for (std::vector< std::vector<double> >::const_iterator it = G_small.begin(); it != G_small.end(); ++ it)
+    // for (std::vector< std::vector<double> >::const_iterator it = G_v.begin(); it != G_v.end(); ++ it)
     // {
     //     for (std::vector<double>::const_iterator itit = it->begin(); itit != it->end(); ++ itit)
     //         cout << *itit << '\t';
 
     //     cout << endl;
     // }
-    cout << "w.size = " << w.size() << endl;
-    cout << "G_small.size x = " << Ch << endl;
-    cout << "G_small.size y = " << Src << endl;
+    cout << "W_v.size = " << W_v.size() << endl;
+    cout << "G Nraws = " << Ch << endl;
+    cout << "G Ncolumns = " << Src << endl;
     cout << "T = " << T << endl;
     return 0;
 }
