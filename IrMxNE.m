@@ -28,17 +28,17 @@
 		% X_prev = X_next;
 		% l = zeros(Nsrc, 1);
 		% figure; image(G*100);
-		matlabpool('open', 4);
 		l(Nsrc) = 0;
-		for s = 1:Nsrc
-			l(s) = sum(columnG_fast(s, G_small, w).^2);
-		end
 		fprintf('Calculating max l(s)...');
+		matlabpool('open', 4);
+		parfor s = 1:Nsrc
+			l(s) = sum(columnG(s, G_small, w).^2);
+		end
+		matlabpool close;
 		mu = 1 / max(l);
 		fprintf('Done.\n');	
 		fprintf('mu = %f\n', mu );
-		matlabpool close;
-		% mu(support(l)) = 1. ./  (5*l(support(l)));
+		% mu(support(l)) = 1. ./  (5*l(support(l))); 	
  %  ------------------------------------------------------------------------------ %
 		% mu = ones(Nsrc, 1) / 1000;
 		% X = zeros(Nsrc, T);

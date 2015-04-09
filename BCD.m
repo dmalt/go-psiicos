@@ -31,7 +31,7 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG
 		if eta < epsilon
 			fprintf('breaked BCD, dual it = %d, MxNE_it = %d\n', i, k);
 			break;
-		elseif eta > 1e8
+		elseif eta > 1e8 && mod(i,1000) == 0
 			fprintf('BCD ERROR: diverged!!\n');
 			mu = mu /10;
 			% break;

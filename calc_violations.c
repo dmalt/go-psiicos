@@ -1,5 +1,7 @@
 #include "mex.h"
 #include <cblas.h>
+#include <omp.h>
+#include <stdio.h>
 
 void columnG_fast(mwSize p, double * G_small, double * w, mwSize Nsen, mwSize Nsrc, double * G_col);
 void calc_violations(double * G_small, double * w, mwSize Nsen, mwSize Nsrc, double lambda, double * R, mwSize T, double * violations);
@@ -27,25 +29,29 @@ void calc_violations(double * G_small, double * w, mwSize Nsen, mwSize Nsrc, dou
 {
 	mwSize Sr = Nsrc * Nsrc * 2;
 	mwSize Sn = Nsen * Nsen * 2; /* Number of elements in a column */
-	mwSize s, i;
+	mwSize s, i, nthreads;
 	double * column = mxGetPr(mxCreateDoubleMatrix(Sn, 1, mxREAL));
 	double * result = mxGetPr(mxCreateDoubleMatrix(T, 1, mxREAL));
 	double * RtimeMat = mxGetPr(mxCreateDoubleMatrix(10, 1, mxREAL));
 	double norm = 0.;
 	/*mexPrintf("T = %d\n", T);*/
-	for (s = 0; s < Sr; ++s)
-	{
-		columnG_fast(s+1, G_small, w, Nsen, Nsrc, column);
-		cblas_dgemv(101, 111, T, Sn, 1, R, Sn, column, 1, 0., result, 1);
-		/*for(i = 0; i < T; i++)
-			mexPrintf("%f,", result[i]);*/
-		/*mexPrintf("\n");*/
-		norm = cblas_dnrm2(T, result, 1);
-		violations[s] = norm - lambda;
-		/*if(!(s % 10000))
-			mexPrintf("s = %d\n", s);*/
-	}
-/*	mxDestroyArray(column);
+/*	#pragma omp parallel firstprivate(column, result, norm) shared(s, Sr, Sn, T, R, lambda, violations) private(nthreads) num_threads(8)
+	{*/	
+		/*nthreads = omp_get_num_threads();
+    	printf("Number of threads = %d\n", nthreads);*/
+		#pragma omp parallel for private(s) num_threads(8)/*ordered */
+		for (s = 0; s < 10; ++s)
+		{
+			columnG_fast(s+1, G_small, w, Nsen, Nsrc, column);
+			cblas_dgemv(101, 111, T, Sn, 1, R, Sn, column, 1, 0., result, 1);
+			/*for(i = 0; i < T; i++)
+				mexPrintf("%f,", result[i]);*/
+			/*mexPrintf("\n");*/
+			norm = cblas_dnrm2(T, result, 1);
+			violations[s] = norm - lambda;
+			printf("s = %d\n", s);
+		}
+	/*}*//*	mxDestroyArray(column);
 */}
 
 
