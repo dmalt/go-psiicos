@@ -7,6 +7,11 @@
 
 using namespace Eigen;
 
+#ifndef EIGEN_DONT_PARALLELIZE
+    #define EIGEN_DONT_PARALLELIZE TRUE
+#endif
+
+
 
 // load matrix from an ascii text file.
 void load_matrix(std::istream* is,
@@ -90,25 +95,18 @@ void calc_violations(const MatrixXd & G_small, const VectorXd & W, const MatrixX
     int s, i, nthreads;
     double norm = 0.;
     VectorXd G_col(Nsen);
-/*  #pragma omp parallel firstprivate(column, result, norm) shared(s, Sr, Sn, T, R, lambda, violations) private(nthreads) num_threads(8)
-    {*/ 
-        /*nthreads = omp_get_num_threads();
-        printf("Number of threads = %d\n", nthreads);*/
-        #pragma omp parallel for /*ordered */
-        for (s = 0; s < Nsrc; ++s)
-        {
-            // columnG_fast(s+1, G_small, W, Ch, Sr, G_col);
-            //  cout << "G_col rows:\n" << G_col.transpose().rows()  << endl;
-            //  cout << "G_col cols:\n" << G_col.transpose().cols()  << endl;
-            norm = (G_col.transpose() * R).norm();
-            /*for(i = 0; i < T; i++)
-                mexPrintf("%f,", result[i]);*/
-            /*mexPrintf("\n");*/
-            // norm = cblas_dnrm2(T, result, 1);
-            violations(s) = norm;
-        }
-    /*}
-*/}
+    #pragma omp parallel
+    {
+        cout << omp_get_num_threads()<<endl;
+    #pragma omp parallel for  /*ordered */
+    for (s = 0; s < Nsrc; ++s)
+    {
+        columnG_fast(s+1, G_small, W, Ch, Sr, G_col);
+        norm = (G_col.transpose() * R).norm();
+        violations(s) = norm;
+    }
+    }
+}
 
 // example
 #include <fstream>
@@ -119,17 +117,20 @@ int main()
     // initialize params
     using namespace std;
     // read the file
-    std::ifstream Gs("G_small.txt");
-    std::ifstream Ws("w.txt");
-    std::ifstream Rs("R.txt");
+    std::ifstream Gin("G_small.txt");
+    std::ifstream Win("w.txt");
+    std::ifstream Rin("R.txt");
 
     // load matrices and sizes
     std::vector< std::vector<double> > G_v;
     std::vector< std::vector<double> > W_v;
     std::vector< std::vector<double> > R_v;
-    load_matrix(&Gs, &G_v);
-    load_matrix(&Rs, &R_v);
-    load_matrix(&Ws, &W_v);
+    load_matrix(&Gin, &G_v);
+    load_matrix(&Rin, &R_v);
+    load_matrix(&Win, &W_v);
+    Gin.close();
+    Win.close();
+    Rin.close();
     int Src = G_v[0].size();
     int Ch = G_v.size();
     long int Nsrc = 2 * Src * Src;
@@ -153,7 +154,10 @@ int main()
     // ------------------------ //
 
     calc_violations(G, W, R, V, Ch, Src, T); 
-    // cout << "V:\n" << V << endl;
+    cout << "V:\n" << V <<endl;
+    ofstream Vout("V.txt");
+    Vout << V << endl;
+    Vout.close();
     cout << "G Nraws = " << Ch << endl;
     cout << "G Ncolumns = " << Src << endl;
     cout << "T = " << T << endl;
