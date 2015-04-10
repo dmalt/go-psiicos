@@ -32,7 +32,7 @@
 		fprintf('Calculating max l(s)...');
 		matlabpool('open', 4);
 		parfor s = 1:Nsrc
-			l(s) = sum(columnG(s, G_small, w).^2);
+			l(s) = sum(columnG_fast(s, G_small, w).^2);
 		end
 		matlabpool close;
 		mu = 1 / max(l);

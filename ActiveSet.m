@@ -21,6 +21,9 @@ function A = ActiveSet(G_small, R, lambda, w, k)
 	save G_small.txt G_small -ASCII
 	save R.txt R -ASCII
 	save w.txt w -ASCII
+	unix('./load_matr');
+	src_violations = load('V.txt');
+	src_violations = src_violations - lambda
 	[Dummy, A] =  sort(src_violations, 'descend');
 	if V < S
 		A = A(1:V);
