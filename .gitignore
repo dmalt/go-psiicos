@@ -5,3 +5,7 @@ load_matr
 G_small.mat
 G_test.mat
 columnG
+G_small.txt
+M_r.txt
+R.txt
+w.txt

@@ -5,7 +5,8 @@
 #include <omp.h>
 #include <Eigen/Dense>
 
-void calc_violations(const Eigen::MatrixXd & G_small, const Eigen::MatrixXd & W, const Eigen::MatrixXd & R, Eigen::MatrixXd & violations, int Nsen, int Nsrc, int T);
+using namespace Eigen;
+
 
 // load matrix from an ascii text file.
 void load_matrix(std::istream* is,
@@ -51,7 +52,7 @@ void load_matrix(std::istream* is,
     }
 }
 
-void columnG_fast(int p, double * G_small, double * w, int Nsen, int Nsrc, double * G_col)
+void columnG_fast(int p, const MatrixXd & G_small, const VectorXd & w, int Nsen, int Nsrc, VectorXd & G_col)
 {
     int q = p % (Nsrc * Nsrc);
     int half = (p - 1) / (Nsrc * Nsrc); /* We have columns of two types: those which end with zeros and those which start with zeros. half determines the type*/
@@ -63,48 +64,50 @@ void columnG_fast(int p, double * G_small, double * w, int Nsen, int Nsrc, doubl
         i = Nsrc;
     i --;
     int j = (q - i) / Nsrc;
-    double w_p = w[p-1];
+    double w_p = w(p-1);
     int k, l;
     for (k = 0; k < Nsen; ++k)
         for (l = 0; l < Nsen; ++l)
         {
             if(half == left)
             {
-                G_col[k + Nsen * l] = G_small[k + Nsen * i] * G_small[l + Nsen * j] * w_p;
-                G_col[Nsen * Nsen + k + Nsen * l] = 0.;
+                G_col(k + Nsen * l) = G_small(k,i) * G_small(l,j) * w_p;
+                G_col(Nsen * Nsen + k + Nsen * l) = 0.;
             }
             else if(half == right)
             {
-                G_col[k + Nsen * l] = 0.;
-                G_col[Nsen * Nsen + k + Nsen * l] = G_small[k + Nsen * i] * G_small[l + Nsen * j] * w_p;
+                G_col(k + Nsen * l) = 0.;
+                G_col(Nsen * Nsen + k + Nsen * l) = G_small(k,i) * G_small(l,j) * w_p;
             }
         }
 }
 
-void calc_violations(const Eigen::MatrixXd & G_small, const Eigen::MatrixXd & W, const Eigen::MatrixXd & R, Eigen::MatrixXd & violations, int Nsen, int Nsrc, int T)
+void calc_violations(const MatrixXd & G_small, const VectorXd & W, const MatrixXd & R, VectorXd & violations, int Ch, int Sr, int T)
 {
-    int Sr = Nsrc * Nsrc * 2;
-    int Sn = Nsen * Nsen * 2; /* Number of elements in a column */
+    using namespace std;
+    int Nsrc = Sr * Sr * 2;
+    int Nsen = Ch * Ch * 2; /* Number of elements in a column */
     int s, i, nthreads;
     double norm = 0.;
-    /*mexPrintf("T = %d\n", T);*/
+    VectorXd G_col(Nsen);
 /*  #pragma omp parallel firstprivate(column, result, norm) shared(s, Sr, Sn, T, R, lambda, violations) private(nthreads) num_threads(8)
     {*/ 
         /*nthreads = omp_get_num_threads();
         printf("Number of threads = %d\n", nthreads);*/
-        #pragma omp parallel for private(s) num_threads(8)/*ordered */
-        for (s = 0; s < 10; ++s)
+        #pragma omp parallel for /*ordered */
+        for (s = 0; s < Nsrc; ++s)
         {
-            
-            // cblas_dgemv(101, 111, T, Sn, 1, R, Sn, column, 1, 0., result, 1);
+            // columnG_fast(s+1, G_small, W, Ch, Sr, G_col);
+            //  cout << "G_col rows:\n" << G_col.transpose().rows()  << endl;
+            //  cout << "G_col cols:\n" << G_col.transpose().cols()  << endl;
+            norm = (G_col.transpose() * R).norm();
             /*for(i = 0; i < T; i++)
                 mexPrintf("%f,", result[i]);*/
             /*mexPrintf("\n");*/
             // norm = cblas_dnrm2(T, result, 1);
             violations(s) = norm;
-            printf("s = %d\n", s);
         }
-    /*}*//* mxDestroyArray(column);
+    /*}
 */}
 
 // example
@@ -112,11 +115,9 @@ void calc_violations(const Eigen::MatrixXd & G_small, const Eigen::MatrixXd & W,
 #include <iostream>
 
 int main()
-{
-    using namespace std;
-    using namespace Eigen;
+{  
     // initialize params
-
+    using namespace std;
     // read the file
     std::ifstream Gs("G_small.txt");
     std::ifstream Ws("w.txt");
@@ -135,20 +136,24 @@ int main()
     int Nch = 2 * Ch* Ch;
     int T = R_v[0].size();
     // ---------------------- //
-
+    
     // Iitialize Eigen matrices //
     MatrixXd G(Ch, Src);
-    for (int i = 0; i < Ch; i++)
+    for (int i = 0; i < G_v.size(); i++)
         G.row(i) = VectorXd::Map(&G_v[i][0], Src);
     MatrixXd R(Nch, T);
-    for (int i = 0; i < Nch; i++)
+    
+    for (int i = 0; i < R_v.size(); i++)
         R.row(i) = VectorXd::Map(&R_v[i][0], T);
+
     VectorXd W(Nsrc);
-    for (int i = 0; i < Nsrc; i++)
+    for (int i = 0; i < W_v.size(); i++)
         W(i) = W_v[i][0];
-    VectorXd V(Nsrc);
+    VectorXd V(Nsrc);  // Vector of violations
     // ------------------------ //
 
+    calc_violations(G, W, R, V, Ch, Src, T); 
+    // cout << "V:\n" << V << endl;
     cout << "G Nraws = " << Ch << endl;
     cout << "G Ncolumns = " << Src << endl;
     cout << "T = " << T << endl;
