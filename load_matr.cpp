@@ -3,14 +3,14 @@
 #include <sstream>
 #include <vector>
 #include <omp.h>
-#include <Eigen/Dense>
+#include <fstream>
+#include <iostream>
+extern "C"
+{
+       #include <cblas.h>
+}
 
-using namespace Eigen;
-
-#ifndef EIGEN_DONT_PARALLELIZE
-    #define EIGEN_DONT_PARALLELIZE TRUE
-#endif
-
+using namespace std;
 
 
 // load matrix from an ascii text file.
@@ -57,60 +57,59 @@ void load_matrix(std::istream* is,
     }
 }
 
-void columnG_fast(int p, const MatrixXd & G_small, const VectorXd & w, int Nsen, int Nsrc, VectorXd & G_col)
+void columnG_fast(int p, double * G_small, double * w, int Nsen, int Nsrc, double * G_col)
 {
-    int q = p % (Nsrc * Nsrc);
-    int half = (p - 1) / (Nsrc * Nsrc); /* We have columns of two types: those which end with zeros and those which start with zeros. half determines the type*/
-    int left = 0, right = 1;
-    if(!q)
-        q = Nsrc * Nsrc;
-    int i = q % Nsrc;
-    if(!i)
-        i = Nsrc;
-    i --;
-    int j = (q - i) / Nsrc;
-    double w_p = w(p-1);
-    int k, l;
+  int q = p % (Nsrc * Nsrc);
+  int half = (p - 1) / (Nsrc * Nsrc); /* We have columns of two types: those which end with zeros and those which start with zeros. half determines the type*/
+  int left = 0, right = 1;
+  if(!q)
+    q = Nsrc * Nsrc;
+  int i = q % Nsrc;
+  if(!i)
+    i = Nsrc;
+  i --;
+  int j = (q - i) / Nsrc;
+  double w_p = w[p-1];
+  int k, l;
+  for (l = 0; l < Nsen; ++l)
     for (k = 0; k < Nsen; ++k)
-        for (l = 0; l < Nsen; ++l)
-        {
-            if(half == left)
-            {
-                G_col(k + Nsen * l) = G_small(k,i) * G_small(l,j) * w_p;
-                G_col(Nsen * Nsen + k + Nsen * l) = 0.;
-            }
-            else if(half == right)
-            {
-                G_col(k + Nsen * l) = 0.;
-                G_col(Nsen * Nsen + k + Nsen * l) = G_small(k,i) * G_small(l,j) * w_p;
-            }
-        }
+    {
+      if(half == left)
+      {
+        G_col[k + Nsen * l] = G_small[Nsrc * k + i] * G_small[Nsrc * l + j] * w_p;
+        G_col[Nsen * Nsen + k + Nsen * l] = 0.;
+      }
+      else if(half == right)
+      {
+        G_col[k + Nsen * l] = 0.;
+        G_col[Nsen * Nsen + k + Nsen * l] = G_small[Nsrc * k + i] * G_small[Nsrc * l + j] * w_p;
+      }
+    }
 }
 
-void calc_violations(const MatrixXd & G_small, const VectorXd & W, const MatrixXd & R, VectorXd & violations, int Ch, int Sr, int T)
+void calc_violations(double * G_small, double * W, double * R, double * violations, int Ch, int Sr, int T)
 {
     using namespace std;
     int Nsrc = Sr * Sr * 2;
     int Nsen = Ch * Ch * 2; /* Number of elements in a column */
-    int s, i, nthreads;
+    int s, i;
     double norm = 0.;
-    VectorXd G_col(Nsen);
-    #pragma omp parallel
-    {
-        cout << omp_get_num_threads()<<endl;
-    #pragma omp parallel for  /*ordered */
+    double result[T];
+    double * column = new double[Nsen];
+     #pragma omp parallel for  /*ordered */
     for (s = 0; s < Nsrc; ++s)
     {
-        columnG_fast(s+1, G_small, W, Ch, Sr, G_col);
-        norm = (G_col.transpose() * R).norm();
-        violations(s) = norm;
-    }
+      columnG_fast(s+1, G_small, W, Ch, Sr, column);
+      cblas_dgemv(CblasRowMajor, CblasTrans, Nsen, T, 1, R, T, column, 1, 0., result, 1);
+      norm = cblas_dnrm2(T, result, 1);
+      violations[s] = norm;
+      if(!(s % 10000))
+        cout << "s = "<< s << endl;
     }
 }
 
 // example
-#include <fstream>
-#include <iostream>
+
 
 int main()
 {  
@@ -137,26 +136,30 @@ int main()
     int Nch = 2 * Ch* Ch;
     int T = R_v[0].size();
     // ---------------------- //
-    
-    // Iitialize Eigen matrices //
-    MatrixXd G(Ch, Src);
-    for (int i = 0; i < G_v.size(); i++)
-        G.row(i) = VectorXd::Map(&G_v[i][0], Src);
-    MatrixXd R(Nch, T);
-    
-    for (int i = 0; i < R_v.size(); i++)
-        R.row(i) = VectorXd::Map(&R_v[i][0], T);
-
-    VectorXd W(Nsrc);
-    for (int i = 0; i < W_v.size(); i++)
-        W(i) = W_v[i][0];
-    VectorXd V(Nsrc);  // Vector of violations
+    cout << "G Nraws = " << Ch << endl;
+    cout << "G Ncolumns = " << Src << endl;
+    cout << "T = " << T << endl;
+    // Iitialize matrices //
+    int i,j;
+    double * G= new double[Ch * Src];
+    for (i = 0; i < G_v.size(); i++)
+        for (j = 0; j < G_v[0].size(); ++j)
+            G[Src * i + j] = G_v[i][j];
+    double * R = new double  [Nch * T];
+    for (i = 0; i < R_v.size(); i++)
+        for (j = 0; j < R_v[0].size(); ++j)
+            R[T * i + j] = R_v[i][j];
+    double * W = new double[Nsrc];
+    for (i = 0; i < W_v.size(); i++)
+        W[i] = W_v[i][0];
+    double * V = new double[Nsrc];
     // ------------------------ //
-
     calc_violations(G, W, R, V, Ch, Src, T); 
-    cout << "V:\n" << V <<endl;
+     // cout << "V:\n";
+
     ofstream Vout("V.txt");
-    Vout << V << endl;
+     for (int i = 0; i < Nsrc; ++i)
+         Vout << V[i] <<endl;
     Vout.close();
     cout << "G Nraws = " << Ch << endl;
     cout << "G Ncolumns = " << Src << endl;
