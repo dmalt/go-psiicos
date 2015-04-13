@@ -75,74 +75,72 @@ inline void Get_i_j_from_s(int s, int Nsrc, int & i, int & j, int & half)
 
 void calc_violations(double * G_small, double * W, double * R, double * violations, int Ch, int Sr, int T)
 {
-    using namespace std;
-    int Nsrc = Sr * Sr * 2;
-    int Nsen = Ch * Ch * 2; /* Number of elements in a column */
-    int s, t, k, l, m; // iterators
-    int i, j; // indices
-    int half, left = 0, right = 1;
-    double norm_sq = 0.;
-    double result[T];
-    double prod;
-    double * temp = new double[Ch];
-    double ** colRmat_l = new double * [T];
-    for (t = 0; t < T; ++t)   
-    {
-      colRmat_l[t] = new double[Ch*Ch];
-      for (k = 0; k < Ch; ++k)
-        for (l = 0; l < Ch; ++l)
-          colRmat_l[t][Ch * k + l] = R[T * (Ch * k + l) + t];
-    }   
-    double ** colRmat_r = new double * [T];
-    for (t = 0; t < T; ++t)   
-    {
-      colRmat_r[t] = new double[Ch*Ch];
-      for (k = 0; k < Ch; ++k)
-        for (l = 0; l < Ch; ++l)
-          colRmat_r[t][Ch * k + l] = R[T * (Ch * k + l + Ch * Ch) + t];
-    }
-    double ** colRmat;
-    double ** G = new double * [Sr];
-    for (s = 0; s < Sr; ++s)
-    { 
-      G[s] = new double[Ch];
-      for (m = 0; m < Ch; ++m)
-          G[s][m] = G_small[Sr * m + s];
-    }
     cout << "Entering parallel section..." << endl;
-    // #pragma omp parallel num_threads(8)
-    // {
-      // cout << "nthreads = " << omp_get_max_threads();
-      // #pragma omp parallel for num_threads(8)
-    for (s = 0; s < Nsrc; ++s)
+    #pragma omp parallel num_threads(8)
     {
-      
-      if(!(s % 10000))
-        cout << "s = "<< s << endl;
-
-      // ---------------------- //
-      Get_i_j_from_s(s+1, Sr, i, j, half);
-      // cout << "i = " << i << " j = " << j << " half = " << half << endl;
-
-      if(half == left)
-        colRmat = colRmat_l;
-      else if(half == right)
-        colRmat = colRmat_r;
-      else
-        cout << "ERROR! calc_violations: half was calculated with error\n";
-      
-      for (int t = 0; t < T; ++t)
+      int Nsrc = Sr * Sr * 2;
+      int Nsen = Ch * Ch * 2; /* Number of elements in a column */
+      int s, t, k, l, m; // iterators
+      int i, j; // indices
+      int half, left = 0, right = 1;
+      double norm_sq = 0.;
+      double result[T];
+      double prod;
+      double * temp = new double[Ch];
+      double ** colRmat_l = new double * [T];
+      for (t = 0; t < T; ++t)   
       {
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[i], 1, 0., temp, 1);
-        // prod = cblas_ddot(Ch, G[j], 1, temp, 1);
-        // prod *= W[s];
-       // norm_sq += prod*prod;
+        colRmat_l[t] = new double[Ch*Ch];
+        for (k = 0; k < Ch; ++k)
+          for (l = 0; l < Ch; ++l)
+            colRmat_l[t][Ch * k + l] = R[T * (Ch * k + l) + t];
+      }   
+      double ** colRmat_r = new double * [T];
+      for (t = 0; t < T; ++t)   
+      {
+        colRmat_r[t] = new double[Ch*Ch];
+        for (k = 0; k < Ch; ++k)
+          for (l = 0; l < Ch; ++l)
+            colRmat_r[t][Ch * k + l] = R[T * (Ch * k + l + Ch * Ch) + t];
       }
-      violations[s] = sqrt(norm_sq);
-      norm_sq = 0;
-      // ---------------------- //
+      double ** colRmat;
+      double ** G = new double * [Sr];
+      for (s = 0; s < Sr; ++s)
+      { 
+        G[s] = new double[Ch];
+        for (m = 0; m < Ch; ++m)
+            G[s][m] = G_small[Sr * m + s];
+      }
+        // cout << "nthreads = " << omp_get_max_threads();
+      #pragma omp  for 
+      for (s = 0; s < Nsrc; ++s)
+      {     
+        if(!(s % 800000))
+          {
+            printf(".");
+            fflush(stdout);
+          }
+        // ---------------------- //
+        Get_i_j_from_s(s+1, Sr, i, j, half);
+        // cout << "i = " << i << " j = " << j << " half = " << half << endl;
+        if(half == left)
+          colRmat = colRmat_l;
+        else if(half == right)
+          colRmat = colRmat_r;
+        else
+          cout << "ERROR! calc_violations: half was calculated with error\n";
+        
+        for (int t = 0; t < T; ++t)
+        {
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[i], 1, 0., temp, 1);
+          prod = cblas_ddot(Ch, G[j], 1, temp, 1);
+          norm_sq += prod*prod;
+        }
+        violations[s] = sqrt(norm_sq);
+        norm_sq = 0;
+        // ---------------------- //
+      }
     }
-    // }
 }
 
 // example
