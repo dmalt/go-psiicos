@@ -29,7 +29,7 @@
 		% l = zeros(Nsrc, 1);
 		% figure; image(G*100);
 		l(Nsrc) = 0;
-		fprintf('Calculating max l(s)...');
+		fprintf('Calculating max l(s)...\n');
 		matlabpool('open', 4);
 		parfor s = 1:Nsrc
 			l(s) = sum(columnG_fast(s, G_small, w).^2);

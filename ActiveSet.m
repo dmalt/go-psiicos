@@ -23,13 +23,13 @@ function A = ActiveSet(G_small, R, lambda, w, k)
 	save w.txt w -ASCII
 	unix('./load_matr');
 	src_violations = load('V.txt');
-	src_violations = src_violations - lambda
+	src_violations = src_violations - lambda;
 	[Dummy, A] =  sort(src_violations, 'descend');
 	if V < S
 		A = A(1:V);
 	end
 	A = A(src_violations(A) > 0);
 	src_violations(A)
-	A = idx(A);
+	% A = idx(A);
 	fprintf('Done\n');
 	A = sort(A);
