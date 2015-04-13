@@ -100,7 +100,7 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
     // #pragma omp parallel num_threads(8)
     // {
       // cout << "nthreads = " << omp_get_max_threads();
-     // #pragma omp parallel for num_threads(8)
+      #pragma omp parallel for num_threads(8)
     for (s = 0; s < Nsrc; ++s)
     {
       columnG_fast(s+1, G_small, W, Ch, Sr, column);
