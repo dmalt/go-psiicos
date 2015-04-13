@@ -57,7 +57,7 @@ void load_matrix(std::istream* is,
     }
 }
 
-void columnG_fast(int p, double * G_small, double * w, int Nsen, int Nsrc, double * G_col)
+inline void columnG_fast(int p, double * G_small, double * w, int Nsen, int Nsrc, double * G_col)
 {
   int q = p % (Nsrc * Nsrc);
   int half = (p - 1) / (Nsrc * Nsrc); /* We have columns of two types: those which end with zeros and those which start with zeros. half determines the type*/
@@ -87,28 +87,80 @@ void columnG_fast(int p, double * G_small, double * w, int Nsen, int Nsrc, doubl
     }
 }
 
+inline void Get_i_j_from_s(int s, int Nsrc, int & i, int & j, int & half)
+{
+  int q = s % (Nsrc * Nsrc);
+  half = (s - 1) / (Nsrc * Nsrc); /* We have columns of two types: those which end with zeros and those which start with zeros. half determines the type*/
+  if(!q)
+    q = Nsrc * Nsrc;
+  i = q % Nsrc;
+  if(!i)
+    i = Nsrc;
+  i --;
+  j = (q - i) / Nsrc;
+}
+
 void calc_violations(double * G_small, double * W, double * R, double * violations, int Ch, int Sr, int T)
 {
     using namespace std;
     int Nsrc = Sr * Sr * 2;
     int Nsen = Ch * Ch * 2; /* Number of elements in a column */
-    int s, i;
-    double norm = 0.;
+    int s, t, k, l, m; // iterators
+    int i, j; // indices
+    int half, left = 0, right = 1;
+    double norm = 0., norm_ = 0.;
     double result[T];
+    double prod;
     double * column = new double[Nsen];
+    double * temp = new double[Ch];
+    double * colRmat = new double[Ch*Ch];
+    double * Gj = new double[Ch];
+    double * Gi = new double[Ch];
     cout << "Entering parallel section..." << endl;
     // #pragma omp parallel num_threads(8)
     // {
       // cout << "nthreads = " << omp_get_max_threads();
-      #pragma omp parallel for num_threads(8)
+      // #pragma omp parallel for num_threads(8)
     for (s = 0; s < Nsrc; ++s)
     {
       columnG_fast(s+1, G_small, W, Ch, Sr, column);
       cblas_dgemv(CblasRowMajor, CblasTrans, Nsen, T, 1, R, T, column, 1, 0., result, 1);
       norm = cblas_dnrm2(T, result, 1);
       violations[s] = norm;
-      if(!(s % 10000))
+      // if(!(s % 10000))
         cout << "s = "<< s << endl;
+
+
+      // ---------------------- //
+      Get_i_j_from_s(s+1, Sr, i, j, half);
+      cout << "i = " << i << " j = " << j << " half = " << half << endl;
+      for (m = 0; m < Ch; ++m)
+      {
+        Gj[m] = G_small[Sr * m + j];
+        Gi[m] = G_small[Sr * m + i];
+        cout << "Gj: " << Gj[m] << " Gi: " << Gi[m] << endl; 
+      }
+      for (int t = 0; t < T; ++t)
+      {
+        if(half == left)
+           for (k = 0; k < Ch; ++k)
+             for (l = 0; l < Ch; ++l)
+               colRmat[Ch * k + l] = R[T * (Ch * k + l) + t];
+        else if(half == right)
+           for (k = 0; k < Ch; ++k)
+             for (l = 0; l < Ch; ++l)
+               colRmat[Ch * k + l] = R[T * (Ch * k + l + Ch * Ch) + t];
+        else 
+          cout << "ERROR! calc_violations: half was calculated with error\n";
+        cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, 1, colRmat, Ch, Gi, 1, 0., temp, 1);
+        prod = cblas_ddot(Ch, Gj, 1, temp, 1);
+        prod *= W[s];
+        norm_ += prod*prod;
+      }
+      // norm_ = sqrt(norm_);
+      cout << "norm = " << norm * norm << " norm_ = " << norm_ << endl;
+      norm_ = 0;
+      // ---------------------- //
     }
     // }
 }
