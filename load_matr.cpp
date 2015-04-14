@@ -75,7 +75,8 @@ inline void Get_i_j_from_s(int s, int Nsrc, int & i, int & j, int & half)
 
 void calc_violations(double * G_small, double * W, double * R, double * violations, int Ch, int Sr, int T)
 {
-    cout << "Entering parallel section..." << endl;
+    cout << "   Entering parallel section..." << endl;
+    cout << "   ";
     #pragma omp parallel num_threads(8)
     {
       int Nsrc = Sr * Sr * 2;
@@ -156,6 +157,7 @@ int main()
     std::ifstream Rin("R.txt");
 
     // load matrices and sizes
+    cout << "   Loading data..." << endl;
     std::vector< std::vector<double> > G_v;
     std::vector< std::vector<double> > W_v;
     std::vector< std::vector<double> > R_v;
@@ -165,15 +167,16 @@ int main()
     Gin.close();
     Win.close();
     Rin.close();
+    cout << "   Done." << endl;
     int Src = G_v[0].size();
     int Ch = G_v.size();
     long int Nsrc = 2 * Src * Src;
     int Nch = 2 * Ch* Ch;
     int T = R_v[0].size();
     // ---------------------- //
-    cout << "G Nraws = " << Ch << endl;
-    cout << "G Ncolumns = " << Src << endl;
-    cout << "T = " << T << endl;
+    cout << "   G Nraws = " << Ch << endl;
+    cout << "   G Ncolumns = " << Src << endl;
+    cout << "   T = " << T << endl;
     // Iitialize matrices //
     int i,j;
     double * G= new double[Ch * Src];
@@ -196,8 +199,6 @@ int main()
      for (int i = 0; i < Nsrc; ++i)
          Vout << V[i] <<endl;
     Vout.close();
-    cout << "G Nraws = " << Ch << endl;
-    cout << "G Ncolumns = " << Src << endl;
-    cout << "T = " << T << endl;
+    cout << "\n";
     return 0;
 }

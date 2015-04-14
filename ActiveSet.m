@@ -2,14 +2,14 @@
 function A = ActiveSet(G_small, R, lambda, w, k)
 	fprintf('Calculating active set...\n');
 	V = 200; % Number of sources in a subset
-	[ans, S] = size(G_small);
-	if k == 1
-		S = 2 * S ^ 2; 
-		idx = @(x) x;
-	elseif k ~= 1
-		idx = support(w);
-		[dummy, S] = size(idx);
-	end
+	% [ans, S] = size(G_small);
+	% if k == 1
+	% 	S = 2 * S ^ 2; 
+	% 	idx = @(x) x;
+	% elseif k ~= 1
+	% 	idx = support(w);
+	% 	[dummy, S] = size(idx);
+	% end
 
 
 	% matlabpool('open', 4);
@@ -18,18 +18,22 @@ function A = ActiveSet(G_small, R, lambda, w, k)
 	% 	src_violations(s)  = norm(columnG_fast(idx(s),G_small, w)' * R) - lambda;
 	% end	
 	% matlabpool close;
+	fprintf('Start\n');
+	tic;
 	save G_small.txt G_small -ASCII
 	save R.txt R -ASCII
 	save w.txt w -ASCII
 	unix('./load_matr');
 	src_violations = load('V.txt');
-	src_violations = src_violations - lambda;
+	fprintf('Stop. ');
+	toc;
+	src_violations = src_violations' - lambda;
 	[Dummy, A] =  sort(src_violations, 'descend');
-	if V < S
+	% if V < S
 		A = A(1:V);
-	end
+	% end
 	A = A(src_violations(A) > 0);
-	src_violations(A)
+	% src_violations(A)
 	% A = idx(A);
 	fprintf('Done\n');
 	A = sort(A);

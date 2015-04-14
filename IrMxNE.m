@@ -3,6 +3,7 @@
 	DEBUG = true;
 
 	% Initialization
+
 % -------------------------------------------------------------------------- %
 	M_real = [real(M); imag(M)];
 	G_small = G2dU;
@@ -17,7 +18,7 @@
 	suppX_prev = [];
 	w = ones(Nsrc, 1); 	% Init weights vector
 
-	lambda = 200.; 		% Regularization parameter
+	lambda = 250.; 		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;	% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
@@ -28,11 +29,18 @@
 		% X_prev = X_next;
 		% l = zeros(Nsrc, 1);
 		% figure; image(G*100);
-		l(Nsrc) = 0;
 		fprintf('Calculating max l(s)...\n');
+		l(Nsrc) = 0;
+		if k == 1
+			S = Nsrc; 
+			idx = @(x) x;
+		elseif k ~= 1
+			idx = support(w);
+			[dummy, S] = size(idx);
+		end
 		matlabpool('open', 4);
-		parfor s = 1:Nsrc
-			l(s) = sum(columnG_fast(s, G_small, w).^2);
+		parfor s = 1:S
+			l(s) = sum(columnG_fast(idx(s), G_small, w).^2);
 		end
 		matlabpool close;
 		mu = 1 / max(l);
@@ -61,7 +69,7 @@
 			X_a_reduced = X_a(support(X_a),:);
 			R = M_real - G_a * X_a;
 			% eta = dual_gap(M_real, G, X, lambda, Nsrc, R);
-			fprintf('bcd iterations = %d, eta = %f, size_A = %d\n', bcd_iter, eta, sizeA);
+			fprintf('BCD iter = %d, eta = %f, Active set size = %d\n', bcd_iter, eta, sizeA);
 		
 			A_penalized = ActiveSet(G_small, R, lambda, w, k);
 			A_next = sort(union(A_reduced, A_penalized));
