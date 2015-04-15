@@ -5,7 +5,10 @@
 	% Initialization
 
 % -------------------------------------------------------------------------- %
-	M_real = [real(M); imag(M)];
+	M_full = [real(M); imag(M)];
+	ncomp = 10;
+	[u s v] = svd(M_full);
+	M_real = M_full * v(:,1:ncomp);
 	G_small = G2dU;
 	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
 	[Nch_small, Nsrc_small] = size(G_small);
@@ -18,7 +21,7 @@
 	suppX_prev = [];
 	w = ones(Nsrc, 1); 	% Init weights vector
 
-	lambda = 250.; 		% Regularization parameter
+	lambda = 1000.; 		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;	% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
@@ -113,6 +116,7 @@
 	end
 	elapsed = toc;
 	fprintf('TIC TOC: %g\n', elapsed);
+	save A_reduced.txt A_reduced -ASCII;
 			% Should compute dual gap here and check for convergence 
 	% [I,J] = size(X_next);
 	% for i = 1:I

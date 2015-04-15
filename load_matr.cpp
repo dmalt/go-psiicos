@@ -75,8 +75,7 @@ inline void Get_i_j_from_s(int s, int Nsrc, int & i, int & j, int & half)
 
 void calc_violations(double * G_small, double * W, double * R, double * violations, int Ch, int Sr, int T)
 {
-    cout << "   Entering parallel section..." << endl;
-    cout << "   ";
+    cout << "   Parallel section";
     #pragma omp parallel num_threads(8)
     {
       int Nsrc = Sr * Sr * 2;
