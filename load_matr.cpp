@@ -60,17 +60,13 @@ void load_matrix(std::istream* is,
 
 
 
-inline void Get_i_j_from_s(int s, int Nsrc, int & i, int & j, int & half)
+inline void Get_i_j_from_s(int s, int Nsrc, int & i, int & j)
 {
-  int q = s % (Nsrc * Nsrc);
-  half = (s - 1) / (Nsrc * Nsrc); /* We have columns of two types: those which end with zeros and those which start with zeros. half determines the type*/
-  if(!q)
-    q = Nsrc * Nsrc;
-  i = q % Nsrc;
+  i = s % Nsrc;
   if(!i)
     i = Nsrc;
   i --;
-  j = (q - i) / Nsrc;
+  j = (s - i) / Nsrc;
 }
 
 void calc_violations(double * G_small, double * W, double * R, double * violations, int Ch, int Sr, int T)
@@ -78,32 +74,22 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
     cout << "   Parallel section";
     #pragma omp parallel num_threads(8)
     {
-      int Nsrc = Sr * Sr * 2;
-      int Nsen = Ch * Ch * 2; /* Number of elements in a column */
+      int Nsrc = Sr * Sr;
+      int Nsen = Ch * Ch; /* Number of elements in a column */
       int s, t, k, l, m; // iterators
       int i, j; // indices
-      int half, left = 0, right = 1;
       double norm_sq = 0.;
       double result[T];
       double prod;
       double * temp = new double[Ch];
-      double ** colRmat_l = new double * [T];
+      double ** colRmat = new double * [T];
       for (t = 0; t < T; ++t)   
       {
-        colRmat_l[t] = new double[Ch*Ch];
+        colRmat[t] = new double[Ch*Ch];
         for (k = 0; k < Ch; ++k)
           for (l = 0; l < Ch; ++l)
-            colRmat_l[t][Ch * k + l] = R[T * (Ch * k + l) + t];
+            colRmat[t][Ch * k + l] = R[T * (Ch * k + l) + t];
       }   
-      double ** colRmat_r = new double * [T];
-      for (t = 0; t < T; ++t)   
-      {
-        colRmat_r[t] = new double[Ch*Ch];
-        for (k = 0; k < Ch; ++k)
-          for (l = 0; l < Ch; ++l)
-            colRmat_r[t][Ch * k + l] = R[T * (Ch * k + l + Ch * Ch) + t];
-      }
-      double ** colRmat;
       double ** G = new double * [Sr];
       for (s = 0; s < Sr; ++s)
       { 
@@ -111,8 +97,7 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
         for (m = 0; m < Ch; ++m)
             G[s][m] = G_small[Sr * m + s];
       }
-        // cout << "nthreads = " << omp_get_max_threads();
-      #pragma omp  for 
+      #pragma omp for 
       for (s = 0; s < Nsrc; ++s)
       {     
         if(!(s % 800000))
@@ -121,14 +106,8 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
             fflush(stdout);
           }
         // ---------------------- //
-        Get_i_j_from_s(s+1, Sr, i, j, half);
-        // cout << "i = " << i << " j = " << j << " half = " << half << endl;
-        if(half == left)
-          colRmat = colRmat_l;
-        else if(half == right)
-          colRmat = colRmat_r;
-        else
-          cout << "ERROR! calc_violations: half was calculated with error\n";
+        Get_i_j_from_s(s+1, Sr, i, j);
+        // cout << "i = " << i << " j = " << j << endl;
         
         for (int t = 0; t < T; ++t)
         {
@@ -169,8 +148,8 @@ int main()
     cout << "   Done." << endl;
     int Src = G_v[0].size();
     int Ch = G_v.size();
-    long int Nsrc = 2 * Src * Src;
-    int Nch = 2 * Ch* Ch;
+    long int Nsrc = Src * Src;
+    int Nch = Ch* Ch;
     int T = R_v[0].size();
     // ---------------------- //
     cout << "   G Nraws = " << Ch << endl;
@@ -178,7 +157,7 @@ int main()
     cout << "   T = " << T << endl;
     // Iitialize matrices //
     int i,j;
-    double * G= new double[Ch * Src];
+    double * G = new double[Ch * Src];
     for (i = 0; i < G_v.size(); i++)
         for (j = 0; j < G_v[0].size(); ++j)
             G[Src * i + j] = G_v[i][j];

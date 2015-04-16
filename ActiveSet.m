@@ -32,6 +32,7 @@ function A = ActiveSet(G_small, R, lambda, w, k)
 	% if V < S
 		A = A(1:V);
 	% end
+	% src_violations(1:100)
 	A = A(src_violations(A) > 0);
 	% src_violations(A)
 	% A = idx(A);

@@ -1,7 +1,7 @@
-function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG)
+function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, tau, DEBUG)
 	I = 20000;			% Number of BCD iterations per one MxNE iteration
 	Y_next = Y_prev;
-	R = M - G * Y_prev;
+	R = M_ - G * Y_prev;
 	fprintf('BCD');
 	tic;
 	for i = 1:I
@@ -21,10 +21,11 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG
 		% end
 		% Should compute a dual gap here and check for the convergence
 % ------------------------------------------------------------------------------------ %
-		eta  = dual_gap(M, G, Y_next, lambda, S, R);
+		eta  = dual_gap(M_, G, Y_next, lambda, S, R);
 % ------------------------------------------------------------------------------------ %
-		
-
+		if i == 1
+			fprintf('\nStarting with eta = %f\n', eta);
+		end
 		if mod(i,5000) == 0 
 			mu = mu / 2;
 		elseif mod(i, 1000) == 0
@@ -35,7 +36,7 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M, lambda, epsilon, k, mu, tau, DEBUG
 			break;
 		elseif eta > 1e8 && mod(i,1000) == 0
 			fprintf('BCD ERROR: diverged!!\n');
-			mu = mu /10;
+			% mu = mu /10;
 			% break;
 		end
 	end

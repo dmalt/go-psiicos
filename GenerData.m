@@ -52,7 +52,7 @@ phi = PHI(1);
     % mix noise and data 
     % in order to control SNR we first normalize norm(BrainNoise(:)) = 1 and 
     % norm(Induced(:)) = 1 and then mix the two with the coefficient
-    Data0 = BrainNoise + InducedScale*Induced + EvokedScale*Evoked ;
+    Data0 = InducedScale*Induced + EvokedScale*Evoked;% + BrainNoise ;
     [bf af] = butter(5,[8,12] / (0.5 * 500), 'bandpass');
     % Filter in the band of interest
     Data = filtfilt(bf,af,Data0')';
@@ -74,11 +74,11 @@ phi = PHI(1);
     % %% Experiment with different methods
     [dummy, T] = size(CrossSpecTime);
     M = [];
-    for t = 1:10
+    for t = 1:T
         Cp = ProjOut(CrossSpecTime(:,t), G2dU);
         M = [M, Cp];
     end
-    M  = M * 1e7;
+    M  = M ;
     % it = it + 1;
 % end;
 return;

@@ -5,14 +5,14 @@
 	% Initialization
 
 % -------------------------------------------------------------------------- %
-	M_full = [real(M); imag(M)];
+	M_abs = abs(M);
 	ncomp = 10;
-	[u s v] = svd(M_full);
-	M_real = M_full * v(:,1:ncomp);
+	[u s v] = svd(M_abs);
+	M_real = M_abs * v(:,1:ncomp);
 	G_small = G2dU;
 	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
 	[Nch_small, Nsrc_small] = size(G_small);
-	Nsrc = 2 * Nsrc_small ^ 2; % Because we want to get real instead of dealing with a complex space
+	Nsrc = Nsrc_small ^ 2; % Because we want to get real instead of dealing with a complex space
 
 
 	X_prev_active = [];	% Matrix of signal sources; 
@@ -21,7 +21,7 @@
 	suppX_prev = [];
 	w = ones(Nsrc, 1); 	% Init weights vector
 
-	lambda = 1000.; 		% Regularization parameter
+	lambda = 10;		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;	% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
@@ -54,8 +54,14 @@
 		% mu = ones(Nsrc, 1) / 1000;
 		% X = zeros(Nsrc, T);
 		R = M_real;
-		
 		A = ActiveSet(G_small, R, lambda, w, k);
+		if k == 1
+			while isempty(A) 
+				lambda = lambda / 2;
+				fprintf('lambda reduced to %f\n', lambda);
+				A = ActiveSet(G_small, R, lambda, w, k);
+			end
+		end
 		A_reduced = [];
 		X_a_reduced = [];
 		for i = 1:100
