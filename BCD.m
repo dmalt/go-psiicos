@@ -1,5 +1,5 @@
 function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, tau, DEBUG)
-	I = 20000;			% Number of BCD iterations per one MxNE iteration
+	I = 1000000;			% Number of BCD iterations per one MxNE iteration
 	Y_next = Y_prev;
 	R = M_ - G * Y_prev;
 	fprintf('BCD');
@@ -27,8 +27,8 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, tau, DEBU
 			fprintf('\nStarting with eta = %f\n', eta);
 		end
 		if mod(i,5000) == 0 
-			mu = mu / 2;
-		elseif mod(i, 1000) == 0
+			% mu = mu / 2;
+		elseif mod(i, 10000) == 0
 			fprintf('.');			 	 
 		end
 		if eta < epsilon

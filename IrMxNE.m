@@ -5,7 +5,8 @@
 	% Initialization
 
 % -------------------------------------------------------------------------- %
-	M_abs = abs(M);
+	% M_abs = abs(M);
+	M_abs = M * 1000;
 	ncomp = 10;
 	[u s v] = svd(M_abs);
 	M_real = M_abs * v(:,1:ncomp);
@@ -21,7 +22,7 @@
 	suppX_prev = [];
 	w = ones(Nsrc, 1); 	% Init weights vector
 
-	lambda = 10;		% Regularization parameter
+	lambda = 0.08;		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;	% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
@@ -52,7 +53,7 @@
 		% mu(support(l)) = 1. ./  (5*l(support(l))); 	
  %  ------------------------------------------------------------------------------ %
 		% mu = ones(Nsrc, 1) / 1000;
-		% X = zeros(Nsrc, T);
+		X = zeros(Nsrc, T);
 		R = M_real;
 		A = ActiveSet(G_small, R, lambda, w, k);
 		if k == 1
@@ -61,12 +62,17 @@
 				fprintf('lambda reduced to %f\n', lambda);
 				A = ActiveSet(G_small, R, lambda, w, k);
 			end
+		elseif k ~= 1
+			if isempty(A)
+				fprintf('A is empty');
+				break;
+			end
 		end
 		A_reduced = [];
 		X_a_reduced = [];
 		for i = 1:100
+			[dummy, sizeA] = size(A);
 			G_a = CalcG(A, G_small, w);
-			[dummy, sizeA] = size(A); 
 			X_a = zeros(sizeA, T);
 			[dummy, nonzero_idx] = intersect(A, A_reduced);
 			if ~isempty(nonzero_idx)
@@ -75,9 +81,11 @@
 			[X_a, bcd_iter] = BCD(sizeA, T, G_a, X_a, M_real, lambda, epsilon, k, mu, tau, DEBUG );
 			% X = zeros(Nsrc,T);
 			A_reduced = A(1, support(X_a));
+			A
 			X_a_reduced = X_a(support(X_a),:);
 			R = M_real - G_a * X_a;
-			% eta = dual_gap(M_real, G, X, lambda, Nsrc, R);
+			% X(A_reduced,:) = X_a_reduced;
+			% eta = dual_gap(M_real, G_small, X, lambda, Nsrc, R);
 			fprintf('BCD iter = %d, eta = %f, Active set size = %d\n', bcd_iter, eta, sizeA);
 		
 			A_penalized = ActiveSet(G_small, R, lambda, w, k);
