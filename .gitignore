@@ -14,3 +14,7 @@ analysis.txt
 gmon.out
 A_reduced.txt
 M_nonoise.mat
+compare
+res
+G2dU_short.mat
+M_short.mat
