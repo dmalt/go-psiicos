@@ -49,7 +49,7 @@ for i=1:size(XYZGen,1)
     d = sum(d.*d,2);
     [val ind] = min(d);
     XYZGenAct(i,:) = R(ind,:);
-    Ggen(:,i) = G2d(:,ind*2-1); % take the first dipole in the tangent plane
+    Ggen(:,i) = G2d(:,ind * 2 - 1); % take the first dipole in the tangent plane
     GenInd(i) = ind; 
 end;
 
@@ -69,9 +69,9 @@ T = 500;   % number of timeslices per trial
 t = 1:T;
 
 % synchrony profiles of networks, one of each  as specified in lines 34-37
-sp(1,:) = exp(-1e-8*(abs(t-150)).^4);
-sp(2,:) = exp(-1e-8*(abs(t-300)).^4);
-sp(3,:) = exp(-0.2e-8*(abs(t-225)).^4);
+sp(1,:) = exp(-1e-8*(abs(t-100)).^6);
+sp(2,:) = exp(-1e-8*(abs(t-350)).^6);
+sp(3,:) = exp(-0.2e-8*(abs(t-225)).^6);
 sp(4,:) = 0.5*(sin(10*t/500)+1);
 
 Ntr = 100; %  number of trials
@@ -102,15 +102,15 @@ for tr = 1:Ntr
     end;
     PhaseShiftsOut(tr,1:2) = [phi1 phi_alpha];
     rnd_phi12 = phi_alpha + dPhi;
-    s{1}(1,:) =     sin(2*pi*F1*t+phi1).*sp(1,:);
-    s{1}(2,:) =     sin(2*pi*F1*t+phi1+rnd_phi12).*sp(1,:);
+    s{1}(1,:) = sin(2 * pi * F1 * t + phi1) .* sp(1,:);
+    s{1}(2,:) = sin(2 * pi * F1 * t + phi1 + rnd_phi12) .* sp(1,:);
 
     if(bUsePhases)
-        phi2 = PhaseShiftsIn(tr,3);
-        phi_alpha = PhaseShiftsIn(tr,4);
+        phi2 = PhaseShiftsIn(tr, 3);
+        phi_alpha = PhaseShiftsIn(tr, 4);
     else
-        phi2= 2*(rand-0.5)*pi;
-        phi_alpha = alpha*(rand-0.5)*pi;
+        phi2= 2 * (rand - 0.5) * pi;
+        phi_alpha = alpha * (rand - 0.5) * pi;
     end;
     PhaseShiftsOut(tr,3:4) = [phi2 phi_alpha];
     rnd_phi34 = phi_alpha + dPhi;
@@ -142,15 +142,15 @@ for tr = 1:Ntr
     s{4}(2,:) =  sin(2*pi*F1*t+phi3+rnd_phi56).*sp(4,:); 
 
     % generate evoked activity
-    e(1,:) = exp(-15*(t-0.2).^2).*sin(2*pi*8*t+0.8*(rand-0.5)*pi);
-    e(2,:) = exp(-15*(t-0.2).^2).*cos(2*pi*8*t+0.8*(rand-0.5)*pi);
+    e(1,:) = exp(-15 * (t - 0.2) .^ 2) .* sin(2 * pi * 8 * t + 0.8 * (rand - 0.5) * pi);
+    e(2,:) = exp(-15 * (t - 0.2) .^ 2) .* cos(2 * pi * 8 * t + 0.8 * (rand - 0.5) * pi);
     
     % collect activity from the selected networks
     induced = zeros(Ns,T);
     for n=NetworkPairIndex
-         a = Ggen(:,nwp{n})*s{n};
-         a = a/norm(a(:));   
-        induced = induced+a;
+         a = Ggen(:,nwp{n}) * s{n};
+         a = a / norm(a(:));   
+        induced = induced + a;
     end;
     induced = induced/sqrt(sum((induced(:).^2)));
     Induced(:,range) = induced;

@@ -22,7 +22,7 @@ ChUsed(3:3:end) = [];
 % G2d0 = zeros(Nch,Nsites * 2);
 range = 1:2;
 
-Dmax = 0.015;
+Dmax = 0.02;
 NPI = NetworkPairIndex{2};
 XYZGen = 1.3 * [0.05, 0.04, 0.05; 0.05, -0.04, 0.05; -0.05, 0.04, 0.05; -0.05, -0.04, 0.05; 0.00, 0.05, 0.06; 0.00, -0.05, 0.06];
 [allnw, nw1, nw2, nw3] = GenerateROC(Dmax, Rloc, XYZGen, NPI);
@@ -61,34 +61,38 @@ phi = PHI(2);
     % mix noise and data 
     % in order to control SNR we first normalize norm(BrainNoise(:)) = 1 and 
     % norm(Induced(:)) = 1 and then mix the two with the coefficient
-    Data0 = InducedScale*Induced + EvokedScale*Evoked + BrainNoise ;
-    [bf af] = butter(5,[8, 12] / (0.5 * 500), 'bandpass');
+    Data0 = InducedScale * Induced + EvokedScale*Evoked + BrainNoise ;
+    [bf af] = butter(5,[8, 12] / (0.5 * 500));
     % Filter in the band of interest
     Data = filtfilt(bf,af,Data0')';
+    Noise = filtfilt(bf, af, BrainNoise')';
+    Data_clear = filtfilt(bf, af, InducedScale * Induced')';
     %% Reshape the data in a 3D structure(Space x Time x Epochs)
     [Nch Tcnt] = size(Data);
     T = fix(Tcnt/Ntr);
     Nch = size(UP,1);
     %reshape Data and store in a 3D array X
     X1 = zeros(Nch,T,Ntr);
+    N1 = zeros(Nch,T,Ntr);
+    N2 = zeros(Nch, T, Ntr);
     range = 1:T;
     for i=1:Ntr
         X1(:,:,i) = UP * Data(:,range);
+        N1(:,:,i) = UP * Noise(:,range);
+        N2(:,:,i) = UP * Data_clear(:,range);
         range = range + T;
     end;
     %% Calculate band cross-spectral matrix 
     CrossSpecTime = CrossSpectralTimeseries(X1);
+    CrossSpecNoise = CrossSpectralTimeseries(N1);
+    CrossSpecClData = CrossSpectralTimeseries(N2);
     % C = reshape(mean(CrossSpecTime{it},2),Nch,Nch); 
     
     % %% Experiment with different methods
     [dummy, T] = size(CrossSpecTime);
-    M = [];
-    for t = 1:T
-        % Cp = ProjOut(CrossSpecTime(:,t), G2dU);
-        Cp = CrossSpecTime(:,t);
-        M = [M, imag(Cp)];
-    end
-    M  = M ;
+    M  = ProjOut(CrossSpecTime, G2dU) ;
+    M_noiseonly = ProjOut(CrossSpecNoise, G2dU);
+    Data_clear = ProjOut(CrossSpecClData, G2dU);
     % it = it + 1;
 % end;
 return;

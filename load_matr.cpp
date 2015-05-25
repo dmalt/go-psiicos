@@ -60,13 +60,13 @@ void load_matrix(std::istream* is,
 
 
 
-inline void Get_i_j_from_s(int s, int Nsrc, int & i, int & j)
+inline void Get_i_j_from_s(int s, int N, int & i, int & j)
 {
-  i = s % Nsrc;
+  i = s % N;
   if(!i)
-    i = Nsrc;
+    i = N;
   i --;
-  j = (s - i) / Nsrc;
+  j = (s - i) / N;
 }
 
 void calc_violations(double * G_small, double * W, double * R, double * violations, int Ch, int Sr, int T)
@@ -74,8 +74,10 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
     cout << "   Parallel section";
     #pragma omp parallel num_threads(8)
     {
-      int Nsrc = Sr * Sr;
-      int Nsen = Ch * Ch; /* Number of elements in a column */
+      int Nsrc_pairs = Sr * Sr;
+      int Nsites = Sr / 2;
+      int Nsite_pairs = Nsites * Nsites;
+      int Nsen_pairs = Ch * Ch; /* Number of elements in a column */
       int s, t, k, l, m; // iterators
       int i, j; // indices
       double norm_sq = 0.;
@@ -83,13 +85,15 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
       double prod;
       double * temp = new double[Ch];
       double ** colRmat = new double * [T];
+
       for (t = 0; t < T; ++t)   
       {
         colRmat[t] = new double[Ch*Ch];
         for (k = 0; k < Ch; ++k)
           for (l = 0; l < Ch; ++l)
             colRmat[t][Ch * k + l] = R[T * (Ch * k + l) + t];
-      }   
+      }
+
       double ** G = new double * [Sr];
       for (s = 0; s < Sr; ++s)
       { 
@@ -97,8 +101,9 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
         for (m = 0; m < Ch; ++m)
             G[s][m] = G_small[Sr * m + s];
       }
+
       #pragma omp for 
-      for (s = 0; s < Nsrc; ++s)
+      for (s = 0; s < Nsite_pairs; ++s)
       {     
         if(!(s % 800000))
           {
@@ -106,13 +111,22 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
             fflush(stdout);
           }
         // ---------------------- //
-        Get_i_j_from_s(s+1, Sr, i, j);
+        Get_i_j_from_s(s+1, Nsites, i, j);
         // cout << "i = " << i << " j = " << j << endl;
         
         for (int t = 0; t < T; ++t)
         {
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[i], 1, 0., temp, 1);
-          prod = cblas_ddot(Ch, G[j], 1, temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
+          prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
+          norm_sq += prod*prod;
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
+          prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
+          norm_sq += prod*prod;
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
+          prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
+          norm_sq += prod*prod;
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
+          prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
           norm_sq += prod*prod;
         }
         violations[s] = sqrt(norm_sq);
@@ -148,7 +162,9 @@ int main()
     cout << "   Done." << endl;
     int Src = G_v[0].size();
     int Ch = G_v.size();
-    long int Nsrc = Src * Src;
+    long int Nsrc_pairs = Src * Src;
+    int Nsites = Src / 2;
+    int Nsite_pairs = Nsites * Nsites;
     int Nch = Ch* Ch;
     int T = R_v[0].size();
     // ---------------------- //
@@ -165,16 +181,16 @@ int main()
     for (i = 0; i < R_v.size(); i++)
         for (j = 0; j < R_v[0].size(); ++j)
             R[T * i + j] = R_v[i][j];
-    double * W = new double[Nsrc];
+    double * W = new double[Nsrc_pairs];
     for (i = 0; i < W_v.size(); i++)
         W[i] = W_v[i][0];
-    double * V = new double[Nsrc];
+    double * V = new double[Nsite_pairs];
     // ------------------------ //
     calc_violations(G, W, R, V, Ch, Src, T); 
      // cout << "V:\n";
 
     ofstream Vout("V.txt");
-     for (int i = 0; i < Nsrc; ++i)
+     for (int i = 0; i < Nsite_pairs; ++i)
          Vout << V[i] <<endl;
     Vout.close();
     cout << "\n";

@@ -1,7 +1,7 @@
 %% subset: returns an array of indices of sources which violate KKT conditions the most
-function A = ActiveSet(G_small, R, lambda, w, k)
+function A = ActiveSet(G_small, R_, lambda, w, k, V)
 	fprintf('Calculating active set...\n');
-	V = 100; % Number of sources in a subset
+	% V = 25; % Number of sources in a subset
 	% [ans, S] = size(G_small);
 	% if k == 1
 	% 	S = 2 * S ^ 2; 
@@ -20,6 +20,7 @@ function A = ActiveSet(G_small, R, lambda, w, k)
 	% matlabpool close;
 	fprintf('Start\n');
 	tic;
+	R = [real(R_), imag(R_)];
 	save G_small.txt G_small -ASCII
 	save R.txt R -ASCII
 	save w.txt w -ASCII
@@ -29,8 +30,9 @@ function A = ActiveSet(G_small, R, lambda, w, k)
 	toc;
 	src_violations = src_violations' - lambda;
 	[Dummy, A] =  sort(src_violations, 'descend');
+	
 	% if V < S
-		A = A(1:V);
+		 A = A(1:V);
 	% end
 	
 	% src_violations(1:100)

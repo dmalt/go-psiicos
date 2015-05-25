@@ -4,13 +4,17 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, tau, DEBU
 	R = M_ - G * Y_prev;
 	fprintf('BCD');
 	tic;
+	
 	for i = 1:I
+        range = 1:4;
 		for s = 1:S
-			Y_next(s,:) = Y_prev(s,:) + mu * G(:,s)' *	R;
-			Y_next(s,:) = Y_next(s,:) * max(1 -  mu * lambda / (norm( Y_next(s,:), 'fro' )  ), 0);
-			R = R - G(:,s) * ( Y_next(s,:) - Y_prev(s,:) );
+			Y_next(range,:) = Y_prev(range,:) + mu * G(:,range)' *	R;
+			Y_next(range,:) = Y_next(range,:) * max(1 -  mu * lambda / (norm( Y_next(range,:), 'fro' )  ), 0);
+			R = R - G(:,range) * ( Y_next(range,:) - Y_prev(range,:) );
+            Y_prev = Y_next;
+			range = range + 4;
 		end
-		Y_prev = Y_next;
+		
 		% if DEBUG == true
 		% 	fprintf('delta = %g,', norm(Y_next - Y_prev, inf));
 		% end
@@ -21,14 +25,16 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, tau, DEBU
 		% end
 		% Should compute a dual gap here and check for the convergence
 % ------------------------------------------------------------------------------------ %
-		eta  = dual_gap(M_, G, Y_next, lambda, S, R);
+		
+		eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
 % ------------------------------------------------------------------------------------ %
 		if i == 1
 			fprintf('\nStarting with eta = %f\n', eta);
 		end
 		if mod(i,5000) == 0 
-			% mu = mu / 2;
-		elseif mod(i, 10000) == 0
+			fprintf('\n eta = %f\n', eta);
+		end
+		if mod(i, 10000) == 0
 			fprintf('.');			 	 
 		end
 		if eta < epsilon

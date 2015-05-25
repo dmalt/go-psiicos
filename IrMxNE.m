@@ -12,15 +12,15 @@
 	M_real = M_abs * v(:,1:ncomp);
 	G_small = G2dU;
 	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
-	[Nch_small, Nsrc_small] = size(G_small);
-	Nsrc = Nsrc_small ^ 2; % Because we want to get real instead of dealing with a complex space
+	[Nch, Nsrc] = size(G_small);
+	Nsrc_pairs = Nsrc ^ 2; % Because we want to get real instead of dealing with a complex space
 
 
 	X_prev_active = [];	% Matrix of signal sources; 
 	X_next_active = [];	% Matrix of signal sources; 
 	suppX_next = [];
 	suppX_prev = [];
-	w = ones(Nsrc, 1); 	% Init weights vector
+	w = ones(Nsrc_pairs, 1); 	% Init weights vector
 
 	lambda = 0.08;		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
@@ -30,21 +30,20 @@
 % --------------------------------------------------------------------------- %
 	tic;
 	for k = 1:K
-		% X_prev = X_next;
-		% l = zeros(Nsrc, 1);
-		% figure; image(G*100);
+% ------------------------------------------------------------------------------- %
 		fprintf('Calculating max l(s)...\n');
-		l(Nsrc) = 0;
-		if k == 1
-			S = Nsrc; 
+		l(Nsrc_pairs) = 0;
+	% To accelerate calculation on the second and subsequent iterations making use of the reduced structurre of G when k~=1
+		if k == 1 
+			S = Nsrc_pairs; 
 			idx = @(x) x;
 		elseif k ~= 1
 			idx = support(w);
-			[dummy, S] = size(idx);
+			[dummy, S] = size(idx);  
 		end
 		matlabpool('open', 4);
 		parfor s = 1:S
-			l(s) = sum(columnG_fast(idx(s), G_small, w).^2);
+			l(s) = sum(columnG_fast(idx(s), G_small, w) .^ 2);
 		end
 		matlabpool close;
 		mu = 1 / max(l);
@@ -52,8 +51,8 @@
 		fprintf('mu = %f\n', mu );
 		% mu(support(l)) = 1. ./  (5*l(support(l))); 	
  %  ------------------------------------------------------------------------------ %
-		% mu = ones(Nsrc, 1) / 1000;
-		X = zeros(Nsrc, T);
+		% mu = ones(Nsrc_pairs, 1) / 1000;
+		% X = zeros(Nsrc_pairs, T);
 		R = M_real;
 		A = ActiveSet(G_small, R, lambda, w, k);
 		if k == 1
@@ -79,13 +78,13 @@
 				X_a(nonzero_idx, :) =  X_a_reduced;	
 			end
 			[X_a, bcd_iter] = BCD(sizeA, T, G_a, X_a, M_real, lambda, epsilon, k, mu, tau, DEBUG );
-			% X = zeros(Nsrc,T);
-			A_reduced = A(1, support(X_a));
+			% X = zeros(Nsrc_pairs,T);
+			A_reduced = A(1, support(X_a)); % Will it reduce active set groupwise or I should check it manually?
 			A
 			X_a_reduced = X_a(support(X_a),:);
 			R = M_real - G_a * X_a;
 			% X(A_reduced,:) = X_a_reduced;
-			% eta = dual_gap(M_real, G_small, X, lambda, Nsrc, R);
+			% eta = dual_gap(M_real, G_small, X, lambda, Nsrc_pairs, R);
 			fprintf('BCD iter = %d, eta = %f, Active set size = %d\n', bcd_iter, eta, sizeA);
 		
 			A_penalized = ActiveSet(G_small, R, lambda, w, k);
@@ -100,10 +99,10 @@
 % ------------------------------------------------------------------------------------------ %
 		suppX_next = A_reduced;
 		X_next_active = diag(w(suppX_next,1)) * X_a_reduced; 
-		% for s = 1:Nsrc
+		% for s = 1:Nsrc_pairs
 		% 	w(s) =   2 * sqrt(  norm( X_next(s,:), 2 )  ) ;
 		% end
-		w = zeros(Nsrc,1);
+		w = zeros(Nsrc_pairs,1);
 		w(suppX_next,1) = 2 * sqrt(diag(X_next_active * X_next_active')); 
 		% --- Calculate norm of difference between solutions on current and previous step ---%
 		suppUnion = sort(union(suppX_next, suppX_prev));

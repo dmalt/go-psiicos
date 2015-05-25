@@ -18,3 +18,8 @@ compare
 res
 G2dU_short.mat
 M_short.mat
+M_im.mat
+M_phi_20.mat
+res_phi_20
+X_lambda=0.05.mat
+G2dU_im.mat

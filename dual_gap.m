@@ -1,4 +1,15 @@
 %% dual_gap: returns primal-dual gap
 function eta = dual_gap(M, G, X, lambda, S, R)
-	R_ = R / max(sqrt(max(diag(G' * R * R' * G)))/ lambda, 1);
-	eta = 0.5 * (norm(M - G * X, 'fro') ^ 2 ) + lambda * sum(sqrt(diag(X * X'))) + 0.5 * ( norm(R_,'fro') ^ 2 ) - sum(sum(R_ .* M ));
+	% B = sqrt(max(diag(G' * R * R' * G)))/ lambda;
+	B(S) = 0;
+	sigma = 0;
+	range = 1:4;
+	for s=1:S
+		B(s) = norm(G(:,range)' * R, 'fro');
+		sigma = sigma + norm(X(range,:), 'fro');
+		range = range + 4;
+	end
+	C = max(B);
+	C = C / lambda;
+	R_ = R / max(C, 1);
+	eta = 0.5 * (norm(R, 'fro') ^ 2 ) + lambda * sigma + 0.5 * ( norm(R_,'fro') ^ 2 ) - sum(sum(R_ .* M ));
