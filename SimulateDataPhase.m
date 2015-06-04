@@ -37,8 +37,8 @@ range = 1:2;
 for i=1:Nsites
     g = [ISD.G.Gain(ChUsed,1+3*(i-1)) ISD.G.Gain(ChUsed,2+3*(i-1)) ISD.G.Gain(ChUsed,3+3*(i-1))];
     [u sv v] = svd(g);
-    G2d(:,range) = g*v(:,1:2);
-    G2dn(:,range) = G2d(:,range)*diag(1./sqrt(sum(G2d(:,range).^2,1)));
+    G2d(:,range) = g * v(:,1:2);
+    G2dn(:,range) = G2d(:,range) * diag(1 ./ sqrt(sum(G2d(:,range) .^ 2, 1)));
     range = range + 2;
 end;
 
@@ -69,9 +69,9 @@ T = 500;   % number of timeslices per trial
 t = 1:T;
 
 % synchrony profiles of networks, one of each  as specified in lines 34-37
-sp(1,:) = exp(-1e-8*(abs(t-100)).^6);
-sp(2,:) = exp(-1e-8*(abs(t-350)).^6);
-sp(3,:) = exp(-0.2e-8*(abs(t-225)).^6);
+sp(1,:) = exp(-1e-8 * (abs(t - 100)) .^ 4) ;
+sp(2,:) = exp(-1e-8 * (abs(t - 350)) .^ 4) ;
+sp(3,:) = exp(-0.2e-8 * (abs(t - 225)) .^ 4) ;
 sp(4,:) = 0.5*(sin(10*t/500)+1);
 
 Ntr = 100; %  number of trials

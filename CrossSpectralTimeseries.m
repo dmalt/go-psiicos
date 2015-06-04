@@ -1,6 +1,6 @@
-function [ A, key,Coh ] = CrossSpectralTimeseries(X,bInducedOnly)
+function [ A, key,Coh ] = CrossSpectralTimeseries(X, bInducedOnly)
 
-if(nargin==1)
+if(nargin == 1)
     bInducedOnly = false;
 end;
 
@@ -9,7 +9,7 @@ ERP = mean(X,3);
 
 Xfft = fft(X,[],2);
 h  = zeros(1,Ns); % nx1 for nonempty. 0x0 for empty.
-if Ns > 0 && 2*fix(Ns/2) == Ns
+if Ns > 0 && 2 * fix(Ns / 2) == Ns
   % even and nonempty
   h([1 Ns/2+1]) = 1;
   h(2:Ns/2) = 2;
@@ -18,26 +18,26 @@ elseif Ns>0
   h(1) = 1;
   h(2:(Ns+1)/2) = 2;
 end
-HF = repmat(h,[Nch,1,Ntr]);
-XH = ifft(Xfft.*HF,[],2);
+HF = repmat(h, [Nch, 1, Ntr]);
+XH = ifft(Xfft .* HF, [], 2);
 Xph = XH; %./(abs(XH)+0.0001*mean(abs(XH(:))));
 clear XH;
-A = zeros(Nch*(Nch-1)/2,Ns);
-Nch_2 = Nch/2;
+A = zeros(Nch * (Nch - 1) / 2, Ns);
+Nch_2 = Nch / 2;
 
 XphConj = conj(Xph);
-Ntr = size(Xph,3);
-range = 1:Nch-1;
+Ntr = size(Xph, 3);
+range = 1:Nch - 1;
 trs = 1:Ntr;
 k = 1;
-KEY = reshape(1:Nch*Nch,Nch,Nch);
+KEY = reshape(1:Nch * Nch, Nch, Nch);
 % we will take the diagonal as well
-A = zeros(Nch*(Nch+1)/2,Ns);
+A = zeros(Nch * (Nch + 1) / 2, Ns);
 fprintf('Calculating vectorised form of the cross spectral matrix upper triangle ... \n');
 fprintf('Reference sensor (max %d): ',Nch); 
 Coh = 1;
 
-if( 2*fix(Ntr/2) ==Ntr)
+if( 2 * fix(Ntr / 2) == Ntr)
     trs_odd = 1:2:Ntr;
     trs_even = 2:2:Ntr;
 else
