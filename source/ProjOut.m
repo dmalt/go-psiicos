@@ -1,15 +1,16 @@
-function [ Cp ] = ProjOut(C, G2dU)
+function [ Cp ] = ProjOut(CT, CT2, G2dU)
 
 % if(nargin < 3)
     Rnk  = 350;
+    Rnk12 = 20;
 % end;
 
 Ns = size(G2dU, 2) / 2; % two topography columns per each source of the grid
 % perform projection of the coherence matrix away from the power only
 Nch = size(G2dU, 1);
 % component
-% vecC = C(:); % Vectorize first
-vecC = C;
+% vecC = CT(:); % Vectorize first
+vecC = CT;
 % project for each potential source
 NsHR = size(G2dU, 2) / 2; % two topography columns per each source of the grid
 range3 = 1:3;
@@ -35,10 +36,14 @@ for i = 1:NsHR
 end;
 AA = A * A';
 [Upwr, e] = eigs(AA, Rnk);
-c = Upwr' * vecC;
-vecCp  = vecC - Upwr * c;
+vecCp  = vecC - Upwr * Upwr' * vecC;
 clear AA A;
 Cp = vecCp;
+if(~isempty(CT2))
+    CT2  = CT2-Upwr * (Upwr' * CT2);
+    [u2,s2,v2] = svd(CT2,'econ');
+    Cp = Cp-u2(:,1:Rnk12)*(u2(:,1:Rnk12)'*Cp); 
+end;
 % put back in shape
 % Cp = reshape(vecCp, size(C,1), size(C,2));
 % initialize source space coupling indicator vector
