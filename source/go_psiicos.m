@@ -1,21 +1,29 @@
 %% IrMxNE: linear regression with mixed norm regularization; M - measurements, G_small - forward model matrix in physical space
-% function X = IrMxNE(M, G_small)
-	DEBUG = true;
-
+function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	% Initialization
-
+    DEBUG = 0;
 % -------------------------------------------------------------------------- %
 	% M_abs = abs(M);
+	if nargin < 3 
+		CT2 = [];
+	end
+	M  = ProjOut(CT, CT2, G_small) ;
 	M_abs = M / norm(M);
-	ncomp = 5;
+	ncomp = 10;
 	[Mu Ms Mv] = svd(M_abs);
 	M_real = M_abs * Mv(:,1:ncomp);
-	G_small = G2dU;
 	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
 	[Nch, Nsrc] = size(G_small);
 	Nsrc_pairs = Nsrc ^ 2; % Because we want to get real instead of dealing with a complex space
 	Nsites = Nsrc / 2; % One site contains two dipoles
 	Nsite_pairs = Nsites ^ 2; % Pairs of sites
+
+	% Normalize generating matix %
+	for i = 1:Nsites
+   		 range_i = i*2-1:i*2;
+   		 G_small(:,range_i(1)) = G_small(:,range_i(1))/norm(G_small(:,range_i(1)));
+   		 G_small(:,range_i(2)) = G_small(:,range_i(2))/norm(G_small(:,range_i(2)));
+	end;
 
 	X_prev_active = [];	% Matrix of signal sources; 
 	X_next_active = [];	% Matrix of signal sources; 
@@ -23,7 +31,7 @@
 	suppX_prev = [];
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
-	lambda = 0.05;		% Regularization parameter
+	lambda = 0.04;		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;			% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
@@ -105,6 +113,7 @@
 				break;
 			end
 			A = A_next;
+			save ../output/A_reduced.mat A_reduced
 		end
 % ------------------------------------------------------------------------------------------ %
 		suppX_next = A_reduced;
@@ -145,6 +154,8 @@
 	end
 	elapsed = toc;
 	fprintf('TIC TOC: %g\n', elapsed);
-	save A_reduced.txt A_reduced -ASCII;
+
 	lambda_str = num2str(lambda);
-	save ( strcat( strcat('X_lambda=', lambda_str), '.mat'), 'X_next_active'  );
+	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active','bootstr_sample'  );
+    X = X_next_active;
+    Aidx = A_reduced;
