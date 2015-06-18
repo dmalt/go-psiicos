@@ -8,13 +8,13 @@ else
     alpha = alpha_in;
 end;
 
-ISD = load('../input/InputData4Simulations.mat');
+ISD = load('InputData4Simulations.mat');
 % load reduced forward model (GLowRes)
 %load('GLowRes.mat'); 
 %ISD.G = GLowRes;
 % set to use gradiometers only
 
-ISD.Channels = load('../input/channel_vectorview306.mat');
+ISD.Channels = load('channel_vectorview306.mat');
 
 SSPVE = 0.98;
 RAP = 1;% number of RAP-MUSIC iterations
