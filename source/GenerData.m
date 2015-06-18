@@ -9,7 +9,7 @@ NetworkPairIndex{1} = [1,2];
 NetworkPairIndex{2} = [1,2,3];
 %% Load forward model and reduce it  
 % load reduced forward model (GLowRes)
-load('GLowRes.mat'); 
+load('../input/GLowRes.mat'); 
 % get grid node locations
 Rloc = GLowRes.GridLoc;
 % set to use gradiometers only

@@ -144,9 +144,9 @@ int main()
     // initialize params
     using namespace std;
     // read the file
-    std::ifstream Gin("G_small.txt");
-    std::ifstream Win("w.txt");
-    std::ifstream Rin("R.txt");
+    std::ifstream Gin("../aux/G_small.txt");
+    std::ifstream Win("../aux/w.txt");
+    std::ifstream Rin("../aux/R.txt");
 
     // load matrices and sizes
     cout << "   Loading data..." << endl;
@@ -189,7 +189,7 @@ int main()
     calc_violations(G, W, R, V, Ch, Src, T); 
      // cout << "V:\n";
 
-    ofstream Vout("V.txt");
+    ofstream Vout("../aux/V.txt");
      for (int i = 0; i < Nsite_pairs; ++i)
          Vout << V[i] <<endl;
     Vout.close();

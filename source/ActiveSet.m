@@ -4,11 +4,11 @@ function A = ActiveSet(G_small, R_, lambda, w, k, V)
 	fprintf('Start\n');
 	tic;
 	R = [real(R_), imag(R_)];
-	save G_small.txt G_small -ASCII
-	save R.txt R -ASCII
-	save w.txt w -ASCII
+	save ../aux/G_small.txt G_small -ASCII
+	save ../aux/R.txt R -ASCII
+	save ../aux/w.txt w -ASCII
 	unix('./ActSetViol');
-	src_violations = load('V.txt');
+	src_violations = load('../aux/V.txt');
 	fprintf('Stop. ');
 	toc;
 	src_violations = src_violations' - lambda;
