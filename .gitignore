@@ -26,8 +26,4 @@ G2dU_im.mat
 BCD.m~
 GenerateROC.m~
 ActSetViol
-./input/BrainNoiseBiomag2014.mat
-channel_vectorview306.mat
-GLowRes.mat
-InputData4Simulations.mat
-.*mat
+*.mat
