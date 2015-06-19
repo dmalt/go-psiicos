@@ -27,3 +27,7 @@ BCD.m~
 GenerateROC.m~
 ActSetViol
 source/BrainNoiseBiomag2014.mat
+input/BrainNoiseBiomag2014.mat
+input/channel_vectorview306.mat
+input/GLowRes.mat
+input/InputData4Simulations.mat
