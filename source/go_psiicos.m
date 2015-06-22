@@ -38,7 +38,6 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	K = 50;%30;			% Number of MxNE iterations
 
 % --------------------------------------------------------------------------- %
-	tic;
 	for k = 1:K
 % ------------------------------------------------------------------------------- %
 		ActSetChunk = 25;
@@ -152,7 +151,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		X_prev_active = X_next_active;
 		suppX_prev = suppX_next;
 	end
-	elapsed = toc;
+
 	fprintf('TIC TOC: %g\n', elapsed);
 
 	lambda_str = num2str(lambda);
