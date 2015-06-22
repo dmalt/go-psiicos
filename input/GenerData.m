@@ -25,7 +25,7 @@ range = 1:2;
 Dmax = 0.02;
 NPI = NetworkPairIndex{2};
 XYZGen = 1.3 * [0.05, 0.04, 0.05; 0.05, -0.04, 0.05; -0.05, 0.04, 0.05; -0.05, -0.04, 0.05; 0.00, 0.05, 0.06; 0.00, -0.05, 0.06];
-[allnw, nw1, nw2, nw3] = GenerateROC(Dmax, Rloc, XYZGen, NPI);
+[allnw, nw1, nw2, nw3] = FindEffSources(Dmax, Rloc, XYZGen, NPI);
 effSites = unique([allnw(:,1); allnw(:,2)]);
 effSites(effSites == 0) = Nsites;
 
@@ -90,9 +90,9 @@ phi = PHI(2);
     
     % %% Experiment with different methods
     [dummy, T] = size(CrossSpecTime);
-    M  = ProjOut(CrossSpecTime, G2dU) ;
-    M_noiseonly = ProjOut(CrossSpecNoise, G2dU);
-    Data_clear_p = ProjOut(CrossSpecClData, G2dU);
+    % M  = ProjOut(CrossSpecTime, G2dU) ;
+    % M_noiseonly = ProjOut(CrossSpecNoise, G2dU);
+    % Data_clear_p = ProjOut(CrossSpecClData, G2dU);
     % it = it + 1;
 % end;
 return;
