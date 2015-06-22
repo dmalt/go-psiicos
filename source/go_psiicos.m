@@ -156,6 +156,6 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	fprintf('TIC TOC: %g\n', elapsed);
 
 	lambda_str = num2str(lambda);
-	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active','bootstr_sample'  );
+	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active');
     X = X_next_active;
     Aidx = A_reduced;
