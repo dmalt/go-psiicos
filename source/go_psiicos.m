@@ -89,7 +89,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 			if ~isempty(nonzero_idx)
 				X_a(ind4(nonzero_idx), :) =  X_a_reduced;	
 			end
-			[X_a, bcd_iter] = BCD(sizeA, T, G_a, X_a, M_real, lambda, epsilon, k, mu, tau, DEBUG );
+			[X_a, bcd_iter] = BCD(sizeA, T, G_a, X_a, M_real, lambda, epsilon, k, mu, DEBUG );
 			% X = zeros(Nsrc_pairs,T);
 			A_reduced = A(1, supp_d(X_a)); 
 			[(mod(A,Nsites))', ((A - mod(A,Nsites)) / Nsites+ 1)']

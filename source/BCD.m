@@ -1,4 +1,20 @@
-function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, tau, DEBUG)
+%% BCD - block-coordinate descent.
+% [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, DEBUG)
+% 	S - active set size;
+% 	T - number of time samples
+% 	G - forward model matrix (in pairs space)
+%	Y_prev - solution on previous iteration
+% 	M_ - EEG\MEG measurements 
+% 	lamdbda - regularization parameter
+% 	epsilon - stopping criterion constant
+% 	k - number of current IrMxNE iteration (for output)
+% 	mu - learning rate
+% 	DEBUG - debugging flag 
+% 
+% 	Y - solution 
+% 	iter - total number of iterations made
+
+function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, DEBUG)
 	I = 1000000;			% Number of BCD iterations per one MxNE iteration
 	Y_next = Y_prev;
 	R = M_ - G * Y_prev;
@@ -19,8 +35,7 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, tau, DEBU
 		% 	fprintf('delta = %g,', norm(Y_next - Y_prev, inf));
 		% end
 
-		% if norm(Y_next - Y_prev, inf) < tau
-		% 	fprintf('breaked BCD, delta it = %d, MxNE_it = %d\n', i, k);
+		% if norm(Y_next - Y_prev, inf) < 	% 	fprintf('breaked BCD, delta it = %d, MxNE_it = %d\n', i, k);
 		% 	break;
 		% end
 		% Should compute a dual gap here and check for the convergence
