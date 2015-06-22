@@ -14,7 +14,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	M_real = M_abs * Mv(:,1:ncomp);
 	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
 	[Nch, Nsrc] = size(G_small);
-	Nsrc_pairs = Nsrc ^ 2; % Because we want to get real instead of dealing with a complex space
+	Nsrc_pairs = Nsrc ^ 2; 
 	Nsites = Nsrc / 2; % One site contains two dipoles
 	Nsite_pairs = Nsites ^ 2; % Pairs of sites
 
