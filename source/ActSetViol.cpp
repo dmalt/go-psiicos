@@ -159,7 +159,7 @@ int main()
     Gin.close();
     Win.close();
     Rin.close();
-    cout << "   Done." << endl;
+    // cout << "   Done." << endl;
     int Src = G_v[0].size();
     int Ch = G_v.size();
     long int Nsrc_pairs = Src * Src;
@@ -168,9 +168,9 @@ int main()
     int Nch = Ch* Ch;
     int T = R_v[0].size();
     // ---------------------- //
-    cout << "   G Nraws = " << Ch << endl;
-    cout << "   G Ncolumns = " << Src << endl;
-    cout << "   T = " << T << endl;
+    // cout << "   G Nraws = " << Ch << endl;
+    // cout << "   G Ncolumns = " << Src << endl;
+    // cout << "   T = " << T << endl;
     // Iitialize matrices //
     int i,j;
     double * G = new double[Ch * Src];
