@@ -2,13 +2,14 @@
 #include <cblas.h>
 #include <stdio.h>
 
-mwSize max_array(double * a, mwSize num_elements);
+double max_array(double * a, mwSize num_elements);
 void print_array(int a[], int num_elements);
 void CalcDualGap(mwSize, mwSize, mwSize, mwSize, double, double *, double *, double *, double *, double *);
 
-mwSize max_array(double * a, mwSize num_elements)
+double max_array(double * a, mwSize num_elements)
 {
-   mwSize i, max=-32000;
+   mwSize i;
+   double max=-32000.;
    for (i=0; i<num_elements; i++)
 	 if (a[i]>max)
 	    max=a[i];
@@ -53,15 +54,16 @@ void CalcDualGap(mwSize Nsrc_sq, mwSize Ntime, mwSize Nsen_sq, mwSize S, double 
 	{
 		G_s = &G[Nsen_sq * src * 4];
 		X_s = &X[Ntime * src * 4];
+		/* G(:,range)' * R: */
 		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, Nsen_sq, Ntime, 4, 1, G_s, Nsen_sq, R, Nsen_sq, 0, temp, Nsen_sq);
 		B[src] = cblas_dnrm2(Nsen_sq * Ntime, temp, 1);
 		sigma += cblas_dnrm2(4 * Ntime, X_s, 1); 
 		mexPrintf("%f\n",B[src]);
 	}
-	C = max_array(B, S);  /*/ lambda;*/
+	C = max_array(B, S) / lambda;
 	if(C > 1)
 		maxC_1 = C;
-	cblas_dcopy(Nsen_sq * Ntime, R_, 1, R, 1);
+	cblas_dcopy(Nsen_sq * Ntime, R, 1, R_, 1);
 	cblas_dscal(Nsen_sq * Ntime, 1. / maxC_1, R_, 1);
 	mexPrintf("%f\n",C);
 
