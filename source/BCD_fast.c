@@ -22,7 +22,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(nrhs != 6)
     	mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nrhs", "Six inputs required.");
     mwSize Nsen_sq  = mxGetM(prhs[0]);
-    mwSize Nsrc_sq  = mxGetM(prhs[0]);
+    mwSize Nsrc_sq  = mxGetN(prhs[0]);
 	double * G 		= mxGetPr(prhs[0]);
  
  	mwSize Ntime  	= mxGetN(prhs[1]);
@@ -38,7 +38,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  	*eta = 1;
  	double * pr = mxGetPr(plhs[1]);
  	pr[0] = 2; pr[1] = 4;
- 	BlockCoorDescent(Nsrc_sq, Nsen_sq, Ntime, G, Y_prev, M_, lambda, epsilon, mu);
+ 	BlockCoorDescent(Nsrc_sq, Nsen_sq, Ntime, G, X, M_, lambda, epsilon, mu);
 }
 
 
@@ -53,7 +53,7 @@ mwSize BlockCoorDescent(mwSize Nsrc_sq, mwSize Nsen_sq, mwSize Ntime,\
 	double *R = mxCalloc(Nsen_sq * Ntime, sizeof(double));
 	cblas_dcopy(Nsen_sq * Ntime, M_, 1, R, 1);
 	cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,\
-				 Nsen_sq, Ntime, Nsrc_sq , -1., G, Nsen_sq, Y_prev, Nsrc_sq, 1, R, Nsen_sq);
+				 Nsen_sq, Ntime, Nsrc_sq , -1., G, Nsen_sq, Y_prev, Nsrc_sq, 1., R, Nsen_sq);
 	mwSize i;
 	for (i = 0; i < Nsen_sq * Ntime; ++i)
 	{
