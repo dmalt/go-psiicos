@@ -4,7 +4,7 @@
 
 double max_array(double * a, mwSize num_elements);
 void print_array(int a[], int num_elements);
-void CalcDualGap(mwSize, mwSize, mwSize, mwSize, double, double *, double *, double *, double *, double *);
+double CalcDualGap(mwSize, mwSize, mwSize, mwSize, double, double *, double *, double *, double *, double *);
 
 double max_array(double * a, mwSize num_elements)
 {
@@ -31,13 +31,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  	mwSize S 		= mxGetScalar(prhs[4]);
  	double * R 		= mxGetPr(prhs[5]);
 
- 	plhs[0] = mxCreateDoubleMatrix(Nsen_sq, Ntime, mxREAL);
+ 	plhs[0] = mxCreateDoubleScalar(mxREAL);
  	double * temp = malloc(Nsen_sq * Ntime * sizeof(double));
- 	temp = mxGetPr(plhs[0]);
- 	CalcDualGap(Nsrc_sq, Ntime, Nsen_sq, S, lambda, M, G, X, R, temp);
+ 	double * eta = mxGetPr(plhs[0]);
+ 	*eta = CalcDualGap(Nsrc_sq, Ntime, Nsen_sq, S, lambda, M, G, X, R, temp);
 }
 
-void CalcDualGap(mwSize Nsrc_sq, mwSize Ntime, mwSize Nsen_sq, mwSize S, double lambda,\
+double CalcDualGap(mwSize Nsrc_sq, mwSize Ntime, mwSize Nsen_sq, mwSize S, double lambda,\
 				 double * M, double * G, double * X, double * R, double * temp)
 {
 	mwSize src, sen, t;
@@ -58,15 +58,18 @@ void CalcDualGap(mwSize Nsrc_sq, mwSize Ntime, mwSize Nsen_sq, mwSize S, double 
 		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, Nsen_sq, Ntime, 4, 1, G_s, Nsen_sq, R, Nsen_sq, 0, temp, Nsen_sq);
 		B[src] = cblas_dnrm2(Nsen_sq * Ntime, temp, 1);
 		sigma += cblas_dnrm2(4 * Ntime, X_s, 1); 
-		mexPrintf("%f\n",B[src]);
 	}
 	C = max_array(B, S) / lambda;
 	if(C > 1)
 		maxC_1 = C;
 	cblas_dcopy(Nsen_sq * Ntime, R, 1, R_, 1);
 	cblas_dscal(Nsen_sq * Ntime, 1. / maxC_1, R_, 1);
-	mexPrintf("%f\n",C);
 
+	double normR  = cblas_dnrm2(Nsen_sq * Ntime, R, 1);
+	double normR_ = normR / maxC_1; 
+	double R_dotM = cblas_ddot(Nsen_sq * Ntime, R_, 1, M, 1); /* = sum(sum(R_ .* M )) */
+	double eta = 0.5 * normR * normR + lambda * sigma + 0.5 * normR_ * normR_ - R_dotM;
+	return eta;
 	/*cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, Nsen_sq, Ntime, Nsrc_sq, 1, G, Nsen_sq, X, Nsrc_sq, 0, temp, Nsen_sq);*/
 	/* cblas_dgemv(CblasColMajor, CblasNoTrans, Nsen_sq, Nsrc_sq, 1, G, Nsen_sq, X, 1, 0., temp, 1); */
 }
