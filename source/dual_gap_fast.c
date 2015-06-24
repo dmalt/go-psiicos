@@ -4,7 +4,7 @@
 
 double max_array(double * a, mwSize num_elements);
 void print_array(int a[], int num_elements);
-double CalcDualGap(mwSize, mwSize, mwSize, mwSize, double, double *, double *, double *, double *, double *);
+double CalcDualGap(mwSize, mwSize, mwSize, mwSize, double, double *, double *, double *, double *);
 
 double max_array(double * a, mwSize num_elements)
 {
@@ -32,18 +32,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  	double * R 		= mxGetPr(prhs[5]);
 
  	plhs[0] = mxCreateDoubleScalar(mxREAL);
- 	double * temp = (double *)mxMalloc(Nsen_sq * Ntime * sizeof(double));
+ 	
  	double * eta = mxGetPr(plhs[0]);
- 	*eta = CalcDualGap(Nsrc_sq, Ntime, Nsen_sq, S, lambda, M, G, X, R, temp);
+ 	*eta = CalcDualGap(Nsrc_sq, Ntime, Nsen_sq, S, lambda, M, G, X, R);
 }
 
 double CalcDualGap(mwSize Nsrc_sq, mwSize Ntime, mwSize Nsen_sq, mwSize S, double lambda,\
-				 double * M, double * G, double * X, double * R, double * temp)
+				 double * M, double * G, double * X, double * R)
 {
 	mwSize src, sen, t;
 	double sigma = 0.;
 	double * B = (double *)mxMalloc(sizeof(double) * S);
 	double * R_ = (double *)mxMalloc(sizeof(double) * Nsen_sq * Ntime);
+	double * temp = (double *)mxMalloc(Nsen_sq * Ntime * sizeof(double));
 	double C = 0.;
 	double * G_s = (double *)mxMalloc(sizeof(double) * Nsen_sq * 4); /* G_s corresponds to topography of two interacting sites on cortex, 
 	i.e. two interacting pairs of dipoles*/
