@@ -14,10 +14,12 @@
 % 	Y - solution 
 % 	iter - total number of iterations made
 
-function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, DEBUG)
+function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, k, mu, DEBUG)
 	I = 1000000;			% Number of BCD iterations per one MxNE iteration
 	Y_next = Y_prev;
 	R = M_ - G * Y_prev;
+	T = size(M_,2);
+	S = size(G,2) / 4;
 	fprintf('BCD');
 	tic;
 	
