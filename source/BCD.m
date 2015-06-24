@@ -31,14 +31,6 @@ function [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, DEBUG)
 			range = range + 4;
 		end
 		
-		% if DEBUG == true
-		% 	fprintf('delta = %g,', norm(Y_next - Y_prev, inf));
-		% end
-
-		% if norm(Y_next - Y_prev, inf) < 	% 	fprintf('breaked BCD, delta it = %d, MxNE_it = %d\n', i, k);
-		% 	break;
-		% end
-		% Should compute a dual gap here and check for the convergence
 % ------------------------------------------------------------------------------------ %
 		
 		eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
