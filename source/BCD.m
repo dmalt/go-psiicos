@@ -1,5 +1,5 @@
 %% BCD - block-coordinate descent.
-% [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu, DEBUG)
+% [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu)
 % 	S - active set size;
 % 	T - number of time samples
 % 	G - forward model matrix (in pairs space)
@@ -9,12 +9,11 @@
 % 	epsilon - stopping criterion constant
 % 	k - number of current IrMxNE iteration (for output)
 % 	mu - learning rate
-% 	DEBUG - debugging flag 
 % 
 % 	Y - solution 
 % 	iter - total number of iterations made
 
-function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, k, mu, DEBUG)
+function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, mu)
 	I = 1000000;			% Number of BCD iterations per one MxNE iteration
 	Y_next = Y_prev;
 	R = M_ - G * Y_prev;
@@ -47,7 +46,7 @@ function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, k, mu, DEBUG)
 			fprintf('.');			 	 
 		end
 		if eta < epsilon
-			fprintf('\nbreaked BCD, dual it = %d, MxNE_it = %d', i, k);
+			fprintf('\nbreaked BCD, dual it = %d', i);
 			break;
 		elseif eta > 1e8 && mod(i,1000) == 0
 			fprintf('BCD ERROR: diverged!!\n');
