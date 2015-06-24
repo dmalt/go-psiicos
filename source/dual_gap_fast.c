@@ -32,7 +32,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  	double * R 		= mxGetPr(prhs[5]);
 
  	plhs[0] = mxCreateDoubleScalar(mxREAL);
- 	double * temp = malloc(Nsen_sq * Ntime * sizeof(double));
+ 	double * temp = (double *)mxMalloc(Nsen_sq * Ntime * sizeof(double));
  	double * eta = mxGetPr(plhs[0]);
  	*eta = CalcDualGap(Nsrc_sq, Ntime, Nsen_sq, S, lambda, M, G, X, R, temp);
 }
@@ -42,30 +42,36 @@ double CalcDualGap(mwSize Nsrc_sq, mwSize Ntime, mwSize Nsen_sq, mwSize S, doubl
 {
 	mwSize src, sen, t;
 	double sigma = 0.;
-	double * B = malloc(sizeof(double) * S);
-	double * R_ = malloc(sizeof(double) * Nsen_sq * Ntime);
+	double * B = (double *)mxMalloc(sizeof(double) * S);
+	double * R_ = (double *)mxMalloc(sizeof(double) * Nsen_sq * Ntime);
 	double C = 0;
-	double * G_s = malloc(sizeof(double) * Nsen_sq * 4); /* G_s corresponds to topography of two interacting sites on cortex, 
+	double * G_s = (double *)mxMalloc(sizeof(double) * Nsen_sq * 4); /* G_s corresponds to topography of two interacting sites on cortex, 
 	i.e. two interacting pairs of dipoles*/
-	double maxC_1 = 1;
-	double * X_s = malloc(sizeof(double) * Ntime * 4);
+	double maxC_1 = 1.;
+	double * X_s = (double *)mxMalloc(sizeof(double) * Ntime * 4);
 	/*double * temp =  */
 	for (src = 0; src < S; ++src)
 	{
 		G_s = &G[Nsen_sq * src * 4];
 		X_s = &X[Ntime * src * 4];
 		/* G(:,range)' * R: */
-		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, Nsen_sq, Ntime, 4, 1, G_s, Nsen_sq, R, Nsen_sq, 0, temp, Nsen_sq);
-		B[src] = cblas_dnrm2(Nsen_sq * Ntime, temp, 1);
+		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, 4, Ntime, Nsen_sq , 1, G_s, 4, R, Nsen_sq, 0, temp, Nsen_sq);
+		B[src] = cblas_dnrm2(4 * Ntime, temp, 1);
+		mexPrintf("%f\n", B[src]);
 		sigma += cblas_dnrm2(4 * Ntime, X_s, 1); 
 	}
 	C = max_array(B, S) / lambda;
-	if(C > 1)
+	mexPrintf("%f\n", C);
+	mexPrintf("%f\n", lambda);
+	mexPrintf("%f\n", max_array(B,S));
+
+	if(C > 1.)
 		maxC_1 = C;
 	cblas_dcopy(Nsen_sq * Ntime, R, 1, R_, 1);
 	cblas_dscal(Nsen_sq * Ntime, 1. / maxC_1, R_, 1);
 
 	double normR  = cblas_dnrm2(Nsen_sq * Ntime, R, 1);
+
 	double normR_ = normR / maxC_1; 
 	double R_dotM = cblas_ddot(Nsen_sq * Ntime, R_, 1, M, 1); /* = sum(sum(R_ .* M )) */
 	double eta = 0.5 * normR * normR + lambda * sigma + 0.5 * normR_ * normR_ - R_dotM;
