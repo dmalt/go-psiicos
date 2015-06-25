@@ -59,5 +59,16 @@ mwSize BlockCoorDescent(mwSize Nsrc_sq, mwSize Nsen_sq, mwSize Ntime,\
 	{
 		mexPrintf("%f\n", R[i]);
 	}
+
+	mexPrintf("BCD\n");
+	mwSize iter, src;
+	double * G_s = (double *)mxMalloc(sizeof(double) * Nsen_sq * 4);	
+	for (iter = 0; iter < maxIter; ++iter)
+	{
+		for (src = 0; src < S; ++src)
+		{
+			/* code */
+		}
+	}
 	return 0;
 }
