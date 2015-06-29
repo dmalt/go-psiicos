@@ -9,7 +9,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
 	M_norm = M / norm(M);
-	ncomp = 10;
+	ncomp = 3;
 	[Mu Ms Mv] = svd(M_norm);
 	M_svd = M_norm * Mv(:,1:ncomp);
 	
@@ -41,7 +41,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	suppX_prev = [];
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
-	lambda = 0.04;		% Regularization parameter
+	lambda = 0.1;		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;			% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
@@ -58,16 +58,21 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		if k == 1 
 			S = Nsite_pairs; 
 			idx = @(x) x;
+			matlabpool('open', 4);
+			parfor s = 1:S
+				G_s = G_pair(  idx(s), G_small, w( idx(s) )  );
+				l(s) = norm(G_s' * G_s, 'fro');
+			end
+			matlabpool close;
 		elseif k ~= 1
 			idx = support(w);
 			[dummy, S] = size(idx);  
+			for s = 1:S
+				G_s = G_pair(  idx(s), G_small, w( idx(s) )  );
+				l(s) = norm(G_s' * G_s, 'fro');
+			end
 		end
-		matlabpool('open', 4);
-		parfor s = 1:S
-			G_s = G_pair(  idx(s), G_small, w( idx(s) )  );
-			l(s) = norm(G_s' * G_s, 'fro');
-		end
-		matlabpool close;
+		
 		mu = 1 / max(l);
 
 		fprintf('Done.\n');	
@@ -103,7 +108,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 			[X_a, bcd_iter] = BCD(G_a, X_a, M_svd, lambda, epsilon, mu);
 			% X = zeros(Nsrc_pairs,T);
 			A_reduced = A(1, supp_d(X_a)); 
-			[(mod(A,Nsites))', ((A - mod(A,Nsites)) / Nsites+ 1)']
+			Pairs = [(mod(A,Nsites))', ((A - mod(A,Nsites)) / Nsites+ 1)']
 			X_a_reduced = X_a(ind4(supp_d(X_a)),:);
 			Res = M_svd - G_a * X_a;
 			% X(A_reduced,:) = X_a_reduced;
