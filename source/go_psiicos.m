@@ -3,21 +3,31 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	% Initialization
     DEBUG = 0;
 % -------------------------------------------------------------------------- %
-	% M_abs = abs(M);
+	% M_norm = abs(M);
 	if nargin < 3 
 		CT2 = [];
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
-	M_abs = M / norm(M);
+	M_norm = M / norm(M);
 	ncomp = 10;
-	[Mu Ms Mv] = svd(M_abs);
-	M_real = M_abs * Mv(:,1:ncomp);
-	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
+	[Mu Ms Mv] = svd(M_norm);
+	M_svd = M_norm * Mv(:,1:ncomp);
+	
+	[Nch , T] = size(M_svd); % Nch - number of channels, T - number of time samples
 	[Nch, Nsrc] = size(G_small);
-	Nsrc_pairs = Nsrc ^ 2; % Because we want to get real instead of dealing with a complex space
+	Nsrc_pairs = Nsrc ^ 2; 
 	Nsites = Nsrc / 2; % One site contains two dipoles
 	Nsite_pairs = Nsites ^ 2; % Pairs of sites
 
+	IND((Nch ^ 2 + Nch) / 2) = 0; 
+	s = 1;
+	for k = 1:Nch
+    	for l = k:Nch
+        	IND(s) = Nch * (k - 1) + l;
+        	s = s + 1;
+    	end
+	end
+	% M_svd = M_svd_full(IND,:);
 	% Normalize generating matix %
 	for i = 1:Nsites
    		 range_i = i*2-1:i*2;
@@ -38,6 +48,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	K = 50;%30;			% Number of MxNE iterations
 
 % --------------------------------------------------------------------------- %
+	timerOn = tic;
 	for k = 1:K
 % ------------------------------------------------------------------------------- %
 		ActSetChunk = 25;
@@ -65,7 +76,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
  %  ------------------------------------------------------------------------------ %
 		% mu = ones(Nsrc_pairs, 1) / 1000;
 		% X = zeros(Nsrc_pairs, T);
-		Res = M_real;
+		Res = M_svd;
 		A = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
 		if k == 1
 			while isempty(A) 
@@ -89,17 +100,17 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 			if ~isempty(nonzero_idx)
 				X_a(ind4(nonzero_idx), :) =  X_a_reduced;	
 			end
-			[X_a, bcd_iter] = BCD(sizeA, T, G_a, X_a, M_real, lambda, epsilon, k, mu, tau, DEBUG );
+			[X_a, bcd_iter] = BCD(G_a, X_a, M_svd, lambda, epsilon, mu);
 			% X = zeros(Nsrc_pairs,T);
 			A_reduced = A(1, supp_d(X_a)); 
 			[(mod(A,Nsites))', ((A - mod(A,Nsites)) / Nsites+ 1)']
 			X_a_reduced = X_a(ind4(supp_d(X_a)),:);
-			Res = M_real - G_a * X_a;
+			Res = M_svd - G_a * X_a;
 			% X(A_reduced,:) = X_a_reduced;
 			fprintf('BCD iter = %d, eta = %f, Active set size = %d\n', bcd_iter, eta, sizeA);
 		
 			A_penalized = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
-			eta = dual_gap_big([real(M_real), imag(M_real)], G_small, [real(X_a), imag(X_a)], lambda, sizeA, [real(Res), imag(Res)]);
+			eta = dual_gap_big([real(M_svd), imag(M_svd)], G_small, [real(X_a), imag(X_a)], lambda, sizeA, [real(Res), imag(Res)]);
 			fprintf('eta = %f, ', eta );
 
 			A_next = sort(union(A_reduced, A_penalized));
@@ -112,7 +123,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 				break;
 			end
 			A = A_next;
-			save ../output/A_reduced.mat A_reduced
+			save ../output/A_reduced.mat A_reduced;
 		end
 % ------------------------------------------------------------------------------------------ %
 		suppX_next = A_reduced;
@@ -152,8 +163,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		suppX_prev = suppX_next;
 	end
 
-	fprintf('TIC TOC: %g\n', elapsed);
-
+	toc(timerOn);
 	lambda_str = num2str(lambda);
 	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active');
     X = X_next_active;

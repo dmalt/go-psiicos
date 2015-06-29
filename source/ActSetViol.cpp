@@ -76,7 +76,8 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
     {
       int Nsrc_pairs = Sr * Sr;
       int Nsites = Sr / 2;
-      int Nsite_pairs = Nsites * Nsites;
+      int Nsite_pairs = Nsites * (Nsites + 1) / 2; /* For each time instant this is number 
+of source-space cross-spectrum elements above the diagonal plus on the diagonal itself. */
       int Nsen_pairs = Ch * Ch; /* Number of elements in a column */
       int s, t, k, l, m; // iterators
       int i, j; // indices
@@ -85,6 +86,16 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
       double prod;
       double * temp = new double[Ch];
       double ** colRmat = new double * [T];
+
+      s = 0;
+      int IND[Nsite_pairs][2];
+      for (i = 0; i < Nsites; ++i)
+        for (j = i; j < Nsites; ++j)
+        {
+            IND[s][0] = i;
+            IND[s][1] = j;
+            s++;
+        }
 
       for (t = 0; t < T; ++t)   
       {
@@ -101,7 +112,6 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
         for (m = 0; m < Ch; ++m)
             G[s][m] = G_small[Sr * m + s];
       }
-
       #pragma omp for 
       for (s = 0; s < Nsite_pairs; ++s)
       {     
@@ -111,25 +121,27 @@ void calc_violations(double * G_small, double * W, double * R, double * violatio
             fflush(stdout);
           }
         // ---------------------- //
-        Get_i_j_from_s(s+1, Nsites, i, j);
+        // Get_i_j_from_s(s+1, Nsites, i, j);
+        i = IND[s][0];
+        j = IND[s][1];
         // cout << "i = " << i << " j = " << j << endl;
         
         for (int t = 0; t < T; ++t)
         {
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
           norm_sq += prod*prod;
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
           norm_sq += prod*prod;
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
           norm_sq += prod*prod;
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
           norm_sq += prod*prod;
         }
-        violations[s] = sqrt(norm_sq);
+        violations[i * Nsites + j] = sqrt(norm_sq);
         norm_sq = 0;
         // ---------------------- //
       }
@@ -188,7 +200,7 @@ int main()
     // ------------------------ //
     calc_violations(G, W, R, V, Ch, Src, T); 
      // cout << "V:\n";
-
+    cout << endl << "   Writing data..." << endl;
     ofstream Vout("../aux/V.txt");
      for (int i = 0; i < Nsite_pairs; ++i)
          Vout << V[i] <<endl;

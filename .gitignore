@@ -28,3 +28,6 @@ GenerateROC.m~
 ActSetViol
 *.mat
 dual_gap_fast.mexa64
+BCD_fast.mexa64
+ActSetViol_cu
+
