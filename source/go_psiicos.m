@@ -11,7 +11,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	M_norm = M / norm(M);
 	ncomp = 10;
 	[Mu Ms Mv] = svd(M_norm);
-	M_svd_full = M_norm * Mv(:,1:ncomp);
+	M_svd = M_norm * Mv(:,1:ncomp);
 	
 	[Nch , T] = size(M_svd); % Nch - number of channels, T - number of time samples
 	[Nch, Nsrc] = size(G_small);
@@ -20,13 +20,14 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	Nsite_pairs = Nsites ^ 2; % Pairs of sites
 
 	IND((Nch ^ 2 + Nch) / 2) = 0; 
+	s = 1;
 	for k = 1:Nch
     	for l = k:Nch
         	IND(s) = Nch * (k - 1) + l;
         	s = s + 1;
     	end
 	end
-	M_svd = M_svd_full(IND,:);
+	% M_svd = M_svd_full(IND,:);
 	% Normalize generating matix %
 	for i = 1:Nsites
    		 range_i = i*2-1:i*2;
@@ -47,6 +48,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	K = 50;%30;			% Number of MxNE iterations
 
 % --------------------------------------------------------------------------- %
+	timerOn = tic;
 	for k = 1:K
 % ------------------------------------------------------------------------------- %
 		ActSetChunk = 25;
@@ -121,7 +123,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 				break;
 			end
 			A = A_next;
-			save ../output/A_reduced.mat A_reduced
+			save ../output/A_reduced.mat A_reduced;
 		end
 % ------------------------------------------------------------------------------------------ %
 		suppX_next = A_reduced;
@@ -161,7 +163,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		suppX_prev = suppX_next;
 	end
 
-
+	toc(timerOn);
 	lambda_str = num2str(lambda);
 	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active');
     X = X_next_active;
