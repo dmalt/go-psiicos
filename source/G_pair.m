@@ -1,4 +1,7 @@
 %% G_pair: returns topograhy matrix of interaction of i and j sites
+% s is number of a pair of sites
+% G_small is generating model matrix in nonsquare space
+% w is scalar weight of pair s
 function G = G_pair(s, G_small, w)
 	G = [];
 	[Nch, Nsrc] = size(G_small);
