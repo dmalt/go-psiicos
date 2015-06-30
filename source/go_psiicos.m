@@ -42,6 +42,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
 	lambda = 0.0001;		% Regularization parameter
+
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;			% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
