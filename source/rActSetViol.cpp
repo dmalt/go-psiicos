@@ -132,22 +132,22 @@ of source-space cross-spectrum elements above the diagonal plus on the diagonal 
         
         for (int t = 0; t < T; ++t)
         {
-          temp = G[2 * i];
+          cblas_dcopy(Ch, G[2 * i], 1, temp, 1);
           cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
-          norm_sq += prod*prod;
-          temp = G[2 * i + 1];
+          norm_sq += prod * prod;
+          cblas_dcopy(Ch, G[2 * i + 1], 1, temp, 1);
           cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
-          norm_sq += prod*prod;
-          temp = G[2 * i];
+          norm_sq += prod * prod;
+          cblas_dcopy(Ch, G[2 * i], 1, temp, 1);
           cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
-          norm_sq += prod*prod;
-          temp = G[2 * i + 1];
+          norm_sq += prod * prod;
+          cblas_dcopy(Ch, G[2 * i + 1], 1, temp, 1);
           cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
-          norm_sq += prod*prod;
+          norm_sq += prod * prod;
         }
         violations[i * Nsites + j] = sqrt(norm_sq);
         norm_sq = 0;
