@@ -131,6 +131,8 @@ of source-space cross-spectrum elements above the diagonal plus on the diagonal 
           cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
           norm_sq += prod*prod;
+          // cout << prod << endl;
+          
           cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
           norm_sq += prod*prod;
