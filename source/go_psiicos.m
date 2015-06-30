@@ -9,7 +9,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
 	M_norm = M / norm(M);
-	ncomp = 5;
+	ncomp = 3;
 	[Mu Ms Mv] = svd(M_norm);
 	M_svd = M_norm * Mv(:,1:ncomp);
 	
@@ -41,7 +41,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	suppX_prev = [];
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
-	lambda = 0.04;		% Regularization parameter
+	lambda = 0.1;		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;			% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 

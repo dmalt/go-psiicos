@@ -69,7 +69,7 @@ inline void Get_i_j_from_s(int s, int N, int & i, int & j)
   j = (s - i) / N;
 }
 
-void calc_violations(double * G_small, double * W, double * R, double * violations, int Ch, int Sr, int T)
+void calc_violations(double * G_small, double * R, double * violations, int Ch, int Sr, int T)
 {
     cout << "   Parallel section";
     #pragma omp parallel num_threads(8)
@@ -128,16 +128,16 @@ of source-space cross-spectrum elements above the diagonal plus on the diagonal 
         
         for (int t = 0; t < T; ++t)
         {
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, 1., colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
           norm_sq += prod*prod;
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, 1., colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
           norm_sq += prod*prod;
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, 1., colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
           norm_sq += prod*prod;
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[i * Nsites + j], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, 1., colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
           norm_sq += prod*prod;
         }
@@ -157,19 +157,15 @@ int main()
     using namespace std;
     // read the file
     std::ifstream Gin("../aux/G_small.txt");
-    std::ifstream Win("../aux/w.txt");
     std::ifstream Rin("../aux/R.txt");
 
     // load matrices and sizes
     cout << "   Loading data..." << endl;
     std::vector< std::vector<double> > G_v;
-    std::vector< std::vector<double> > W_v;
     std::vector< std::vector<double> > R_v;
     load_matrix(&Gin, &G_v);
     load_matrix(&Rin, &R_v);
-    load_matrix(&Win, &W_v);
     Gin.close();
-    Win.close();
     Rin.close();
     // cout << "   Done." << endl;
     int Src = G_v[0].size();
@@ -193,12 +189,9 @@ int main()
     for (i = 0; i < R_v.size(); i++)
         for (j = 0; j < R_v[0].size(); ++j)
             R[T * i + j] = R_v[i][j];
-    double * W = new double[Nsrc_pairs];
-    for (i = 0; i < W_v.size(); i++)
-        W[i] = W_v[i][0];
     double * V = new double[Nsite_pairs];
     // ------------------------ //
-    calc_violations(G, W, R, V, Ch, Src, T); 
+    calc_violations(G, R, V, Ch, Src, T); 
      // cout << "V:\n";
     cout << endl << "   Writing data..." << endl;
     ofstream Vout("../aux/V.txt");
