@@ -193,7 +193,7 @@ int main()
     // ------------------------ //
     calc_violations(G, R, V, Ch, Src, T); 
      // cout << "V:\n";
-    cout << endl << "   Writing data..." << endl;
+    cout << endl << "   Writing data...";
     ofstream Vout("../aux/V.txt");
      for (int i = 0; i < Nsite_pairs; ++i)
          Vout << V[i] <<endl;
