@@ -100,9 +100,13 @@ of source-space cross-spectrum elements above the diagonal plus on the diagonal 
       for (t = 0; t < T; ++t)   
       {
         colRmat[t] = new double[Ch*Ch];
+        s = 0;
         for (k = 0; k < Ch; ++k)
-          for (l = 0; l < Ch; ++l)
-            colRmat[t][Ch * k + l] = R[T * (Ch * k + l) + t];
+          for (l = k; l < Ch; ++l)
+          {
+            colRmat[t][Ch * k + l] = R[T * s + t];
+            s++;
+          }
       }
 
       double ** G = new double * [Sr];
@@ -128,18 +132,22 @@ of source-space cross-spectrum elements above the diagonal plus on the diagonal 
         
         for (int t = 0; t < T; ++t)
         {
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, 1., colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
+          cblas_dcopy(Ch, G[2 * i], 1, temp, 1);
+          cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
-          norm_sq += prod*prod;
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, 1., colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
+          norm_sq += prod * prod;
+          cblas_dcopy(Ch, G[2 * i + 1], 1, temp, 1);
+          cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
-          norm_sq += prod*prod;
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, 1., colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
+          norm_sq += prod * prod;
+          cblas_dcopy(Ch, G[2 * i], 1, temp, 1);
+          cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
-          norm_sq += prod*prod;
-          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, 1., colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
+          norm_sq += prod * prod;
+          cblas_dcopy(Ch, G[2 * i + 1], 1, temp, 1);
+          cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
-          norm_sq += prod*prod;
+          norm_sq += prod * prod;
         }
         violations[i * Nsites + j] = sqrt(norm_sq);
         norm_sq = 0;

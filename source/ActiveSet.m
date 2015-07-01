@@ -9,7 +9,7 @@ function A = ActiveSet(G_small, R_, lambda, w, k, V)
         S = length(w);
 		save ../aux/G_small.txt G_small -ASCII
 		save ../aux/R.txt R -ASCII
-		unix('./rActSetViol');
+		unix('./ActSetViol');
 		src_violations = load('../aux/V.txt');
 		fprintf('Stop. ');
 		src_violations = src_violations' - lambda;
