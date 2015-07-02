@@ -46,7 +46,7 @@ G2d0U = UP * G2d0;
 PHI = [pi / 20 pi / 2];
 it = 1;
 % for phi = PHI 
-phi = PHI(2);
+phi = PHI(1);
     %% Data simulation
     if(it == 1)
         % we will use the same phase shifts in the second and subsequent
@@ -61,7 +61,7 @@ phi = PHI(2);
     % mix noise and data 
     % in order to control SNR we first normalize norm(BrainNoise(:)) = 1 and 
     % norm(Induced(:)) = 1 and then mix the two with the coefficient
-    Data0 = InducedScale * Induced + EvokedScale*Evoked + BrainNoise ;
+    Data0 = InducedScale * Induced + EvokedScale*Evoked;% + BrainNoise ;
     [bf af] = butter(5,[2, 20] / (0.5 * 500));
     % Filter in the band of interest
     Data = filtfilt(bf,af,Data0')';
