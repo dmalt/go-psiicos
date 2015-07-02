@@ -11,5 +11,6 @@ function eta = dual_gap(M, G, X, lambda, S, R)
 	C = max(B);
 	C = C / lambda;
 	R_ = R / max(C, 1);
+	fprintf('norm R^2 = %f\n',0.5 * (norm(R, 'fro') ^ 2 ) );
 	eta = 0.5 * (norm(R, 'fro') ^ 2 ) + lambda * sigma + 0.5 * ( norm(R_,'fro') ^ 2 ) - sum(sum(R_ .* M ));
 	
