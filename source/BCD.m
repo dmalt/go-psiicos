@@ -36,14 +36,14 @@ function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, mu)
 		
 		eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
 % ------------------------------------------------------------------------------------ %
-		if i == 1
-			fprintf('\nStarting with eta = %f\n', eta);
-		end
+		% if i == 1
+		% 	fprintf('\nStarting with eta = %f\n', eta);
+		% end
 		if mod(i,5000) == 0 
-			fprintf('\n eta = %f\n', eta);
+			fprintf('\n 5000 iterations passed; eta = %f\n', eta);
 		end
 		if mod(i, 10000) == 0
-			fprintf('.');			 	 
+			fprintf('\n 10000 iterations passed; eta = %f\n', eta);
 		end
 		if eta < epsilon
 			fprintf('\nbreaked BCD, dual it = %d', i);
