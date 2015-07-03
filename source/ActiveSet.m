@@ -23,7 +23,7 @@ function A = ActiveSet(G_small, R_, lambda, w, k, V)
 	end
 	[Dummy, A] =  sort(src_violations, 'descend');
 	if V < S
-		 A = A(1:4*V);
+		 A = A(1:V);
 	end
 	
 	% src_violations(1:100)
