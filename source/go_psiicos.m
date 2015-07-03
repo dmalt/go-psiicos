@@ -41,7 +41,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	suppX_prev = [];
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
-	lambda = 0.005;		% Regularization parameter
+	lambda = 0.05;		% Regularization parameter
 
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;			% Primal-dual gap  
@@ -50,7 +50,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 
 % --------------------------------------------------------------------------- %
 	timerOn = tic;
-	for k = 1:K
+	for k = 1:1
 % ------------------------------------------------------------------------------- %
 		ActSetChunk = 25;
 		fprintf('Calculating max l(s)...\n');
@@ -98,7 +98,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		end
 		A_reduced = [];
 		X_a_reduced = [];
-		for i = 1:100
+		for i = 1:10000
 			[dummy, sizeA] = size(A);
 			G_a = CalcG(A, G_small, w);
 			X_a = zeros(sizeA * 4, T);
@@ -110,22 +110,26 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 			% X = zeros(Nsrc_pairs,T);
 			A_reduced = A(1, supp_d(X_a)); 
 			Pairs = [(mod(A,Nsites))', ((A - mod(A,Nsites)) / Nsites+ 1)']
+			Pairs_reduced = [(mod(A_reduced,Nsites))', ((A_reduced - mod(A_reduced,Nsites)) / Nsites+ 1)']
 			X_a_reduced = X_a(ind4(supp_d(X_a)),:);
 			Res = M_svd - G_a * X_a;
+			g_nR = norm(Res, 'fro')
 			% X(A_reduced,:) = X_a_reduced;
-			fprintf('BCD iter = %d, eta = %f, Active set size = %d\n', bcd_iter, eta, sizeA);
 		
 			A_penalized = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
-			eta = dual_gap_big([real(M_svd), imag(M_svd)], G_small, [real(X_a), imag(X_a)], lambda, sizeA, [real(Res), imag(Res)]);
-			fprintf('eta = %f, ', eta );
+			size(A_penalized)
+			Pairs_pen = [(mod(A_penalized,Nsites))', ((A_penalized - mod(A_penalized,Nsites)) / Nsites+ 1)']
+
+			eta = dual_gap_big([real(M_svd), imag(M_svd)], G_small, [real(X_a), imag(X_a)], lambda, sizeA, [real(Res), imag(Res)], k, w);
+			fprintf('BCD iter = %d, eta = %f, Active set size = %d\n', bcd_iter, eta, sizeA);
 
 			A_next = sort(union(A_reduced, A_penalized));
 			isthesame = isempty(setxor(A, A_next));
-			if isthesame
-				 % ActSetChunk = ActSetChunk * 2;
-			% end
-			% if eta < epsilon
-				fprintf('isempty = %d, eta = %f, ', isthesame, eta );
+			  % if isthesame
+				  % ActSetChunk = ActSetChunk * 2;
+			 % end
+			  if eta < epsilon
+				fprintf('isempty = %d, global eta = %f, ', isthesame, eta );
 				break;
 			end
 			A = A_next;
@@ -153,9 +157,9 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		[dummy, nonzero_idx_next] = intersect(suppUnion, suppX_next);
 		[dummy, nonzero_idx_prev] = intersect(suppUnion, suppX_prev);
 		if ~isempty(nonzero_idx_next)
-			X_next_exp(ind4(nonzero_idx_next),:) = X_next_active;
-		end
-		if ~isempty(nonzero_idx_prev)
+			% X_next_exp(ind4(nonzero_idx_next),:) = X_next_active;
+		% end
+		% if ~isempty(nonzero_idx_prev)
 			X_prev_exp(ind4(nonzero_idx_prev),:) = X_prev_active;
 		end
 		fprintf('delta_1 = %g\n', norm(X_next_exp - X_prev_exp, inf));

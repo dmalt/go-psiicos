@@ -54,6 +54,7 @@ function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, mu)
 			% break;
 		end
 	end
+	bcd_nR = norm(R, 'fro')
 	fprintf('\n');
 	fprintf('Done. ');
 	toc;

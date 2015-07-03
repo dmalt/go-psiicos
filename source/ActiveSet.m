@@ -22,11 +22,12 @@ function A = ActiveSet(G_small, R_, lambda, w, k, V)
 		end	
 	end
 	[Dummy, A] =  sort(src_violations, 'descend');
+	
 	if V < S
 		 A = A(1:V);
 	end
 	
-	% src_violations(1:100)
+	% src_violations(1:25)
 	A = A(src_violations(A) > 0);
 	% src_violations(A)
 	A = idx(A);
