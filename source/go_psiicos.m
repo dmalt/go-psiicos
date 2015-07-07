@@ -31,7 +31,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	suppX_prev = [];
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
-	lambda = 0.04;		% Regularization parameter
+	lambda = 0.08;		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;			% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
@@ -152,7 +152,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		suppX_prev = suppX_next;
 	end
 
-	fprintf('TIC TOC: %g\n', elapsed);
+	
 
 	lambda_str = num2str(lambda);
 	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active');

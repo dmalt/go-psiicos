@@ -13,9 +13,9 @@ function A = ActiveSet(G_small, R_, lambda, w, k, V)
 	toc;
 	src_violations = src_violations' - lambda;
 	[Dummy, A] =  sort(src_violations, 'descend');
-	% if V < S
-		 A = A(1:V);
-	% end
+	 % if 2*V < S
+		 A = A(1:V*4);
+	 % end
 	
 	% src_violations(1:100)
 	A = A(src_violations(A) > 0);
