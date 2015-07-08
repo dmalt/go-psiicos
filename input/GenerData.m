@@ -46,7 +46,7 @@ G2d0U = UP * G2d0;
 PHI = [pi / 20 pi / 2];
 it = 1;
 % for phi = PHI 
-phi = PHI(2);
+phi = PHI(1);
     %% Data simulation
     if(it == 1)
         % we will use the same phase shifts in the second and subsequent
