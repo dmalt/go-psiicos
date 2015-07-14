@@ -9,7 +9,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
 	M_abs = M / norm(M);
-	ncomp = 10;
+	ncomp = 5;
 	[Mu Ms Mv] = svd(M_abs);
 	M_real = M_abs * Mv(:,1:ncomp);
 	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
