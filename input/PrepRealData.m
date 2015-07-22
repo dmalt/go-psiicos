@@ -119,13 +119,18 @@ for c = 1:length(Conditions)
     end;
 end;
 BootsTrials = zeros(size(ConData{2}.Trials));
-for it=1:50
+
+for it=1:100
     resample = randint(1,ConData{2}.NumTrials,[1,ConData{2}.NumTrials]);
     for tr = 1:ConData{2}.NumTrials
         BootsTrials(:,:,tr) =  ConData{2}.Trials(:,:,resample(tr));
     end
     BootsCT = CrossSpectralTimeseries( BootsTrials);
-    [X,A] = IrmxNE_dip(BootsCT, ConData{1}.CrossSpecTime,G2dLRU, resample, it);
+    cd ../source/;
+    [X,A] = go_psiicos(G2dLRU, BootsCT, ConData{1}.CrossSpecTime);
+    cd ../input/;
+    it_str = num2str(it);
+    save ( strcat( strcat('../output/Output_', it_str), '.mat'), 'A', 'X', 'resample', 'BootsCT');
 end
 %[ Cs, Result, CTp, IND, Upwr,SubC] = RAPPSIICOSTime2CondSubcorr( ConData{2}.CrossSpecTime,[],20, G2dLRU, G2d0LRU, R,350, 5,1);
 R = ConData{1}.HM_LR.GridLoc;
