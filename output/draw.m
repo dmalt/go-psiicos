@@ -58,12 +58,12 @@ for k=1:numfiles
 	A = [A,mydata{k}.A];
 end
 % B = setdiff(A, unique(A));
-occ = zeros(size(A))
+occ = zeros(size(A));
 for i = 1:length(A)
 	occ(i) = sum(A == A(i));
 end
 B = A(occ>0);
-Result = [(mod(B,Nsites))', ((B - mod(B,Nsites)) / Nsites+ 1)']
+Result = [(mod(B,Nsites))', ((B - mod(B,Nsites)) / Nsites+ 1)'];
 [Npairs, dummy] = size(Result);
 adjMat = zeros(Npairs,Npairs);
 Dpair = 0.013;
@@ -75,14 +75,26 @@ for p1 = 1:Npairs
         end
     end
 end
-Result 
-for i = 1:size(Result,1)
-    if length(nonzeros(bfs(adjMat,i) > 0)) > 20
+Result ;
+N = size(Result,1);
+i = 1;
+while(~isempty(Result))
+    if length(nonzeros(bfs(adjMat,i) > 0)) > 10
         % Result(i,:)
-    	L1 = line( R(Result(i,:), 1), R(Result(i,:),2), R(Result(i,:),3) );
-    	plot3( R(Result(i,1), 1), R(Result(i,1),2), R(Result(i,1),3), 'c.', 'Markersize', 40 );
-        plot3( R(Result(i,2), 1), R(Result(i,2),2), R(Result(i,2),3), 'c.', 'Markersize', 40 );
-    	set(L1, 'Color', 'c', 'linewidth',2);
+        clust = Result(bfs(adjMat,i) > -1,:);
+        drawset(clust, R);
+        
+        Result = Result(bfs(adjMat,i) == -1,:);
+        adjMat = adjMat(bfs(adjMat,i) == -1,bfs(adjMat,i) == -1);
+    	% L1 = line( R(Result(i,:), 1), R(Result(i,:),2), R(Result(i,:),3) );
+    	% plot3( R(Result(i,1), 1), R(Result(i,1),2), R(Result(i,1),3), 'c.', 'Markersize', 40 );
+     %    plot3( R(Result(i,2), 1), R(Result(i,2),2), R(Result(i,2),3), 'c.', 'Markersize', 40 );
+    	% set(L1, 'Color', 'c', 'linewidth',2);
+        % i = 1;
+    else
+        Result = Result(2:end,:);
+        adjMat = adjMat(2:end,2:end);
+        % i = i + 1;
     end
 end
 hold on;
