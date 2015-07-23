@@ -12,14 +12,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  	mwSize Nsrc = mxGetN(prhs[1]);
  	double w = mxGetScalar(prhs[2]);
  	double * G_col;
- 	plhs[0] = mxCreateDoubleMatrix((Nsen * Nsen + Nsen) / 2,1,mxREAL);
+ 	plhs[0] = mxCreateDoubleMatrix(Nsen * Nsen,1,mxREAL);
  	G_col = mxGetPr(plhs[0]);
  	columnG_fast(p, G_small, w, Nsen, Nsrc, G_col);
 }
 
 void columnG_fast(mwSize p, double * G_small, double w, mwSize Nsen, mwSize Nsrc, double * G_col)
 {
-
 	mwSize r = (p - 1) % 4;
 	mwSize s = (p - 1) / 4;
 	mwSize Nsites = Nsrc / 2; 
@@ -48,11 +47,7 @@ void columnG_fast(mwSize p, double * G_small, double w, mwSize Nsen, mwSize Nsrc
 		i = 2 * is + 1;
 		j = 2 * js + 1;
 	}
-
 	for (k = 0; k < Nsen; ++k)
-		for (l = k; l < Nsen; ++l)
-		{
-			G_col[s] = G_small[k + Nsen * i] * G_small[l + Nsen * j] * w;
-			s++;
-		}
+		for (l = 0; l < Nsen; ++l)
+			G_col[k + Nsen * l] = G_small[k + Nsen * i] * G_small[l + Nsen * j] * w;
 }

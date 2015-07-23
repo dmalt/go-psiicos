@@ -69,15 +69,14 @@ inline void Get_i_j_from_s(int s, int N, int & i, int & j)
   j = (s - i) / N;
 }
 
-void calc_violations(double * G_small, double * R, double * violations, int Ch, int Sr, int T)
+void calc_violations(double * G_small, double * W, double * R, double * violations, int Ch, int Sr, int T)
 {
     cout << "   Parallel section";
     #pragma omp parallel num_threads(8)
     {
       int Nsrc_pairs = Sr * Sr;
       int Nsites = Sr / 2;
-      int Nsite_pairs = Nsites * (Nsites + 1) / 2; /* For each time instant this is number 
-of source-space cross-spectrum elements above the diagonal plus on the diagonal itself. */
+      int Nsite_pairs = Nsites * Nsites;
       int Nsen_pairs = Ch * Ch; /* Number of elements in a column */
       int s, t, k, l, m; // iterators
       int i, j; // indices
@@ -87,26 +86,12 @@ of source-space cross-spectrum elements above the diagonal plus on the diagonal 
       double * temp = new double[Ch];
       double ** colRmat = new double * [T];
 
-      s = 0;
-      int IND[Nsite_pairs][2];
-      for (i = 0; i < Nsites; ++i)
-        for (j = i; j < Nsites; ++j)
-        {
-            IND[s][0] = i;
-            IND[s][1] = j;
-            s++;
-        }
-
       for (t = 0; t < T; ++t)   
       {
         colRmat[t] = new double[Ch*Ch];
-        s = 0;
         for (k = 0; k < Ch; ++k)
-          for (l = k; l < Ch; ++l)
-          {
-            colRmat[t][Ch * k + l] = R[T * s + t];
-            s++;
-          }
+          for (l = 0; l < Ch; ++l)
+            colRmat[t][Ch * k + l] = R[T * (Ch * k + l) + t];
       }
 
       double ** G = new double * [Sr];
@@ -116,6 +101,7 @@ of source-space cross-spectrum elements above the diagonal plus on the diagonal 
         for (m = 0; m < Ch; ++m)
             G[s][m] = G_small[Sr * m + s];
       }
+
       #pragma omp for 
       for (s = 0; s < Nsite_pairs; ++s)
       {     
@@ -125,31 +111,25 @@ of source-space cross-spectrum elements above the diagonal plus on the diagonal 
             fflush(stdout);
           }
         // ---------------------- //
-        // Get_i_j_from_s(s+1, Nsites, i, j);
-        i = IND[s][0];
-        j = IND[s][1];
+        Get_i_j_from_s(s+1, Nsites, i, j);
         // cout << "i = " << i << " j = " << j << endl;
         
         for (int t = 0; t < T; ++t)
         {
-          cblas_dcopy(Ch, G[2 * i], 1, temp, 1);
-          cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
-          norm_sq += prod * prod;
-          cblas_dcopy(Ch, G[2 * i + 1], 1, temp, 1);
-          cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
+          norm_sq += prod*prod;
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j], 1, temp, 1);
-          norm_sq += prod * prod;
-          cblas_dcopy(Ch, G[2 * i], 1, temp, 1);
-          cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
+          norm_sq += prod*prod;
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
-          norm_sq += prod * prod;
-          cblas_dcopy(Ch, G[2 * i + 1], 1, temp, 1);
-          cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, Ch, colRmat[t], Ch, temp, 1);
+          norm_sq += prod*prod;
+          cblas_dgemv(CblasRowMajor, CblasNoTrans, Ch, Ch, W[s], colRmat[t], Ch, G[2 * i + 1], 1, 0., temp, 1);
           prod = cblas_ddot(Ch, G[2 * j + 1], 1, temp, 1);
-          norm_sq += prod * prod;
+          norm_sq += prod*prod;
         }
-        violations[i * Nsites + j] = sqrt(norm_sq);
+        violations[s] = sqrt(norm_sq);
         norm_sq = 0;
         // ---------------------- //
       }
@@ -165,15 +145,19 @@ int main()
     using namespace std;
     // read the file
     std::ifstream Gin("../aux/G_small.txt");
+    std::ifstream Win("../aux/w.txt");
     std::ifstream Rin("../aux/R.txt");
 
     // load matrices and sizes
     cout << "   Loading data..." << endl;
     std::vector< std::vector<double> > G_v;
+    std::vector< std::vector<double> > W_v;
     std::vector< std::vector<double> > R_v;
     load_matrix(&Gin, &G_v);
     load_matrix(&Rin, &R_v);
+    load_matrix(&Win, &W_v);
     Gin.close();
+    Win.close();
     Rin.close();
     // cout << "   Done." << endl;
     int Src = G_v[0].size();
@@ -197,15 +181,17 @@ int main()
     for (i = 0; i < R_v.size(); i++)
         for (j = 0; j < R_v[0].size(); ++j)
             R[T * i + j] = R_v[i][j];
+    double * W = new double[Nsrc_pairs];
+    for (i = 0; i < W_v.size(); i++)
+        W[i] = W_v[i][0];
     double * V = new double[Nsite_pairs];
     // ------------------------ //
-    calc_violations(G, R, V, Ch, Src, T); 
+    calc_violations(G, W, R, V, Ch, Src, T); 
      // cout << "V:\n";
-    cout << endl << "   Writing data...";
+    cout << endl << "   Writing data..." << endl;
     ofstream Vout("../aux/V.txt");
      for (int i = 0; i < Nsite_pairs; ++i)
          Vout << V[i] <<endl;
     Vout.close();
-    cout << "\n";
     return 0;
 }

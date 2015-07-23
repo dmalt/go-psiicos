@@ -3,12 +3,11 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	% Initialization
     DEBUG = 0;
 % -------------------------------------------------------------------------- %
-	% M_norm = abs(M);
+	% M_abs = abs(M);
 	if nargin < 3 
 		CT2 = [];
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
-
 	M_abs = M / norm(M);
 	ncomp = 5;
 	[Mu Ms Mv] = svd(M_abs);
@@ -19,15 +18,6 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	Nsites = Nsrc / 2; % One site contains two dipoles
 	Nsite_pairs = Nsites ^ 2; % Pairs of sites
 
-	IND((Nch ^ 2 + Nch) / 2) = 0; 
-	s = 1;
-	for k = 1:Nch
-    	for l = k:Nch
-        	IND(s) = Nch * (k - 1) + l;
-        	s = s + 1;
-    	end
-	end
-	M_svd = M_svd_full(IND,:);
 	% Normalize generating matix %
 	for i = 1:Nsites
    		 range_i = i*2-1:i*2;
@@ -42,7 +32,6 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
 	lambda = 0.08;		% Regularization parameter
-
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;			% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
@@ -50,7 +39,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 
 % --------------------------------------------------------------------------- %
 	timerOn = tic;
-	for k = 1:1
+	for k = 1:K
 % ------------------------------------------------------------------------------- %
 		ActSetChunk = 25;
 		fprintf('Calculating max l(s)...\n');
@@ -59,21 +48,16 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		if k == 1 
 			S = Nsite_pairs; 
 			idx = @(x) x;
-			matlabpool('open', 4);
-			parfor s = 1:S
-				G_s = G_pair(  idx(s), G_small, w( idx(s) )  );
-				l(s) = norm(G_s' * G_s, 'fro');
-			end
-			matlabpool close;
 		elseif k ~= 1
 			idx = support(w);
 			[dummy, S] = size(idx);  
-			for s = 1:S
-				G_s = G_pair(  idx(s), G_small, w( idx(s) )  );
-				l(s) = norm(G_s' * G_s, 'fro');
-			end
 		end
-		
+		matlabpool('open', 4);
+		parfor s = 1:S
+			G_s = G_pair(  idx(s), G_small, w( idx(s) )  );
+			l(s) = norm(G_s' * G_s, 'fro');
+		end
+		matlabpool close;
 		mu = 1 / max(l);
 
 		fprintf('Done.\n');	
@@ -82,7 +66,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
  %  ------------------------------------------------------------------------------ %
 		% mu = ones(Nsrc_pairs, 1) / 1000;
 		% X = zeros(Nsrc_pairs, T);
-		Res = M_svd;
+		Res = M_real;
 		A = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
 		if k == 1
 			while isempty(A) 
@@ -98,7 +82,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		end
 		A_reduced = [];
 		X_a_reduced = [];
-		for i = 1:10000
+		for i = 1:100
 			[dummy, sizeA] = size(A);
 			G_a = CalcG(A, G_small, w);
 			X_a = zeros(sizeA * 4, T);
@@ -106,34 +90,30 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 			if ~isempty(nonzero_idx)
 				X_a(ind4(nonzero_idx), :) =  X_a_reduced;	
 			end
-			[X_a, bcd_iter] = BCD(G_a, X_a, M_svd, lambda, epsilon, mu);
+			[X_a, bcd_iter] = BCD(G_a, X_a, M_real, lambda, epsilon, mu);
 			% X = zeros(Nsrc_pairs,T);
 			A_reduced = A(1, supp_d(X_a)); 
-			Pairs = [(mod(A,Nsites))', ((A - mod(A,Nsites)) / Nsites+ 1)']
-			Pairs_reduced = [(mod(A_reduced,Nsites))', ((A_reduced - mod(A_reduced,Nsites)) / Nsites+ 1)']
+			[(mod(A,Nsites))', ((A - mod(A,Nsites)) / Nsites+ 1)']
 			X_a_reduced = X_a(ind4(supp_d(X_a)),:);
-			Res = M_svd - G_a * X_a;
-			g_nR = norm(Res, 'fro')
+			Res = M_real - G_a * X_a;
 			% X(A_reduced,:) = X_a_reduced;
+			fprintf('BCD iter = %d, eta = %f, Active set size = %d\n', bcd_iter, eta, sizeA);
 		
 			A_penalized = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
-			size(A_penalized)
-			Pairs_pen = [(mod(A_penalized,Nsites))', ((A_penalized - mod(A_penalized,Nsites)) / Nsites+ 1)']
-
-			eta = dual_gap_big([real(M_svd), imag(M_svd)], G_small, [real(X_a), imag(X_a)], lambda, sizeA, [real(Res), imag(Res)], k, w);
-			fprintf('BCD iter = %d, eta = %f, Active set size = %d\n', bcd_iter, eta, sizeA);
+			eta = dual_gap_big([real(M_real), imag(M_real)], G_small, [real(X_a), imag(X_a)], lambda, sizeA, [real(Res), imag(Res)]);
+			fprintf('eta = %f, ', eta );
 
 			A_next = sort(union(A_reduced, A_penalized));
 			isthesame = isempty(setxor(A, A_next));
-			  % if isthesame
-				  % ActSetChunk = ActSetChunk * 2;
-			 % end
-			  if eta < epsilon
-				fprintf('isempty = %d, global eta = %f, ', isthesame, eta );
+			if isthesame
+				 % ActSetChunk = ActSetChunk * 2;
+			% end
+			% if eta < epsilon
+				fprintf('isempty = %d, eta = %f, ', isthesame, eta );
 				break;
 			end
 			A = A_next;
-			save ../output/A_reduced.mat A_reduced;
+			save ../output/A_reduced.mat A_reduced
 		end
 % ------------------------------------------------------------------------------------------ %
 		suppX_next = A_reduced;
@@ -157,9 +137,9 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		[dummy, nonzero_idx_next] = intersect(suppUnion, suppX_next);
 		[dummy, nonzero_idx_prev] = intersect(suppUnion, suppX_prev);
 		if ~isempty(nonzero_idx_next)
-			% X_next_exp(ind4(nonzero_idx_next),:) = X_next_active;
-		% end
-		% if ~isempty(nonzero_idx_prev)
+			X_next_exp(ind4(nonzero_idx_next),:) = X_next_active;
+		end
+		if ~isempty(nonzero_idx_prev)
 			X_prev_exp(ind4(nonzero_idx_prev),:) = X_prev_active;
 		end
 		fprintf('delta_1 = %g\n', norm(X_next_exp - X_prev_exp, inf));
@@ -173,9 +153,8 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		suppX_prev = suppX_next;
 	end
 
-
+	
 	toc(timerOn);
-
 	lambda_str = num2str(lambda);
 	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active');
     X = X_next_active;
