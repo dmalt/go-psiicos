@@ -3,7 +3,7 @@ function [ Evoked, Induced, BrainNoise, SensorNoise, G2d, R, Fs,Ntr,XYZGenOut,Gg
 bUsePhases = ~isempty(PhaseShiftsIn);
 
 if(nargin<5)
-    alpha = 0.25;
+    alpha = 1.;
 else
     alpha = alpha_in;
 end;

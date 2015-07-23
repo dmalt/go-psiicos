@@ -27,7 +27,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  
  	mwSize Ntime  	= mxGetN(prhs[1]);
  	double* X 		= mxGetPr(prhs[1]);
- 	double* M_  	= mxGetPr(prhs[2]);
+ 	double* M_  		= mxGetPr(prhs[2]);
  	double lambda 	= mxGetScalar(prhs[3]);
  	double epsilon 	= mxGetScalar(prhs[4]);
  	double mu 		= mxGetScalar(prhs[5]);
@@ -52,8 +52,8 @@ mwSize BlockCoorDescent(mwSize Nsrc_sq, mwSize Nsen_sq, mwSize Ntime,\
 	cblas_dcopy(Nsrc_sq * Ntime, Y_p, 1, Y_n, 1);
 	double* R = mxCalloc(Nsen_sq * Ntime, sizeof(double));
 	cblas_dcopy(Nsen_sq * Ntime, M_, 1, R, 1);
-	cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,\
-				 Nsen_sq, Ntime, Nsrc_sq , -1., G, Nsen_sq, Y_p, Nsrc_sq, 1., R, Nsen_sq);
+	cblas_dgemm(CblasColMajor, CblasTrans, CblasTrans,\
+				 Nsen_sq, Ntime, Nsrc_sq , -1., Y_p, Ntime, G, Nsrc_sq,  1., R, Nsen_sq);
 	mwSize i;
 	for (i = 0; i < Nsen_sq * Ntime; ++i)
 	{
@@ -63,11 +63,13 @@ mwSize BlockCoorDescent(mwSize Nsrc_sq, mwSize Nsen_sq, mwSize Ntime,\
 	mexPrintf("BCD\n");
 	mwSize iter, src;
 	double* G_s = (double*)mxMalloc(sizeof(double) * Nsen_sq * 4);	
+	double* Y_n_s = (double*)mxMalloc(sizeof(double) * Ntime * 4);
 	for (iter = 0; iter < maxIter; ++iter)
 	{
 		for (src = 0; src < S; ++src)
 		{
-			/* code */
+			cblas_dcopy(4 * Ntime, &Y_n[4 * Ntime * src], 1, Y_n_s, 1);
+			cblas_dcopy(4 * Nsen_sq, &G[4 * Ntime * src], 1, G_s, 1);
 		}
 	}
 	return 0;
