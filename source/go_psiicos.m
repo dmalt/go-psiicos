@@ -1,5 +1,9 @@
-%% IrMxNE: linear regression with mixed norm regularization; M - measurements, G_small - forward model matrix in physical space
-function [X,Aidx] = IrMxNE(G_small, CT, CT2)
+%% IrMxNE: linear regression with mixed norm regularization;
+ % lambda - regularization parameter
+ % G_small - forward model matrix in physical space
+ % CT - cross-spectrum of interest
+ % CT2 - cross-spectrum we want project from
+function [X,Aidx] = IrMxNE(lambda, G_small, CT, CT2)
 	% Initialization
     DEBUG = 0;
 % -------------------------------------------------------------------------- %
@@ -31,7 +35,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	suppX_prev = [];
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
-	lambda = 0.08;		% Regularization parameter
+	% lambda = 0.08;		% Regularization parameter
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;			% Primal-dual gap  
 	tau = 1e-4;  		% Tolerance 
