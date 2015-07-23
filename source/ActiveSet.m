@@ -22,10 +22,11 @@ function A = ActiveSet(G_small, R_, lambda, w, k, V)
 		end	
 	end
 	[Dummy, A] =  sort(src_violations, 'descend');
-	
-	if V < S
+
+	 % if 2*V < S
 		 A = A(1:V);
-	end
+	 % end
+
 	
 	% src_violations(1:25)
 	A = A(src_violations(A) > 0);

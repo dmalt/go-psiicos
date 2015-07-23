@@ -19,12 +19,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 void columnG_fast(mwSize p, double * G_small, double w, mwSize Nsen, mwSize Nsrc, double * G_col)
 {
-	mwSize i = p % Nsrc;
-	if(!i)
-		i = Nsrc;
-	i --;
-	mwSize j = (p - i) / Nsrc;
-	mwSize k, l, s = 0;
+
+	mwSize r = (p - 1) % 4;
+	mwSize s = (p - 1) / 4;
+	mwSize Nsites = Nsrc / 2; 
+	mwSize is = s % Nsites;
+	
+	mwSize js = (s - is) / Nsites;
+	mwSize i, j;
+	mwSize k, l;
+	if(r == 0) 
+	{
+		i = 2 * is;
+		j = 2 * js;
+	}
+	else if(r == 1)
+	{
+		i = 2 * is + 1;
+		j = 2 * js;
+	}
+	else if(r == 2)
+	{
+		i = 2 * is;
+		j = 2 * js + 1;
+	}
+	else if(r == 3)
+	{
+		i = 2 * is + 1;
+		j = 2 * js + 1;
+	}
+
 	for (k = 0; k < Nsen; ++k)
 		for (l = k; l < Nsen; ++l)
 		{

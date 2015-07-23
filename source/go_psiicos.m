@@ -8,12 +8,12 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		CT2 = [];
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
-	M_norm = M / norm(M);
+
+	M_abs = M / norm(M);
 	ncomp = 5;
-	[Mu Ms Mv] = svd(M_norm);
-	M_svd_full = M_norm * Mv(:,1:ncomp);
-	
-	[dummy , T] = size(M_svd_full); % Nch - number of channels, T - number of time samples
+	[Mu Ms Mv] = svd(M_abs);
+	M_real = M_abs * Mv(:,1:ncomp);
+	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
 	[Nch, Nsrc] = size(G_small);
 	Nsrc_pairs = Nsrc ^ 2; 
 	Nsites = Nsrc / 2; % One site contains two dipoles
@@ -41,7 +41,7 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 	suppX_prev = [];
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
-	lambda = 0.05;		% Regularization parameter
+	lambda = 0.08;		% Regularization parameter
 
 	epsilon = 1e-5;		% Dual gap threshold
 	eta = 2;			% Primal-dual gap  
@@ -173,7 +173,9 @@ function [X,Aidx] = IrMxNE(G_small, CT, CT2)
 		suppX_prev = suppX_next;
 	end
 
+
 	toc(timerOn);
+
 	lambda_str = num2str(lambda);
 	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active');
     X = X_next_active;
