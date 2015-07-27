@@ -1,8 +1,18 @@
 % clear all;
 % close all;
 %% Parameters block
-InducedScale = 0.35;
-EvokedScale = 0.0 / 2.5;
+%% GenerData: generates simulated data for tests 
+function [G2dU, CrossSpecTime] = GenerData(PhaseLag, InducedScale, EvokedScale)
+
+% InducedScale = 0.35;
+if nargin == 2
+    EvokedScale = 0.0 / 2.5;
+elseif nargin == 1
+       InducedScale = 0;
+       EvokedScale = 0;
+end
+
+phi = PhaseLag;
 GainSVDTh = 0.001; % 0.05 results into 47 eigensensors and makes it run faster but produces less contrasting subcorr scans
 % for a more reliable preformance use 0.01 to get all the sensor on board but be ready to wait;
 NetworkPairIndex{1} = [1,2];
@@ -43,10 +53,10 @@ UP = ug';
 G2dU = UP * G2d;
 G2d0U = UP * G2d0;
 % G2dU = G2dU_full([100000 : 250000, 680000:1130000]);
-PHI = [pi / 20 pi / 2];
+% PHI = [pi / 20 pi / 2];
 it = 1;
 % for phi = PHI 
-phi = PHI(1);
+% phi = PHI(1);
     %% Data simulation
     if(it == 1)
         % we will use the same phase shifts in the second and subsequent
@@ -65,8 +75,8 @@ phi = PHI(1);
     [bf af] = butter(5,[2, 20] / (0.5 * 500));
     % Filter in the band of interest
     Data = filtfilt(bf,af,Data0')';
-    Noise = filtfilt(bf, af, BrainNoise')';
-    Data_clear = filtfilt(bf, af, InducedScale * Induced')';
+    % Noise = filtfilt(bf, af, BrainNoise')';
+    % Data_clear = filtfilt(bf, af, InducedScale * Induced')';
     %% Reshape the data in a 3D structure(Space x Time x Epochs)
     [Nch Tcnt] = size(Data);
     T = fix(Tcnt/Ntr);
@@ -78,14 +88,14 @@ phi = PHI(1);
     range = 1:T;
     for i=1:Ntr
         X1(:,:,i) = UP * Data(:,range);
-        N1(:,:,i) = UP * Noise(:,range);
-        N2(:,:,i) = UP * Data_clear(:,range);
+%         N1(:,:,i) = UP * Noise(:,range);
+%         N2(:,:,i) = UP * Data_clear(:,range);
         range = range + T;
     end;
     %% Calculate band cross-spectral matrix 
     CrossSpecTime = CrossSpectralTimeseries(X1);
-    CrossSpecNoise = CrossSpectralTimeseries(N1);
-    CrossSpecClData = CrossSpectralTimeseries(N2);
+    % CrossSpecNoise = CrossSpectralTimeseries(N1);
+    % CrossSpecClData = CrossSpectralTimeseries(N2);
     % C = reshape(mean(CrossSpecTime{it},2),Nch,Nch); 
     
     % %% Experiment with different methods
