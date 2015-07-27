@@ -74,7 +74,11 @@ void calc_violations(double * G_small, double * R, double * violations, int Ch, 
     cout << "   Parallel section";
     #pragma omp parallel 
     {
-      cout << omp_get_num_threads() << endl;
+      
+      #pragma omp master
+        {
+            cout << " started with " << omp_get_num_threads() << " threads";
+        }
       int Nsrc_pairs = Sr * Sr;
       int Nsites = Sr / 2;
       int Nsite_pairs = Nsites * Nsites;
