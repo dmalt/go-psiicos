@@ -8,7 +8,7 @@ function [X,Aidx] = IrMxNE(lambda, G_small, CT, CT2)
     DEBUG = 0;
 % -------------------------------------------------------------------------- %
 	% M_abs = abs(M);
-	if nargin < 3 
+	if nargin < 4 
 		CT2 = [];
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
@@ -16,7 +16,7 @@ function [X,Aidx] = IrMxNE(lambda, G_small, CT, CT2)
 	ncomp = 5;
 	[Mu Ms Mv] = svd(M_abs);
 	M_real = M_abs * Mv(:,1:ncomp);
-	[Nch , T] = size(M_real); % Nch - number of channels, T - number of time samples
+	[dummy, T] = size(M_real); % Nch - number of channels, T - number of time samples
 	[Nch, Nsrc] = size(G_small);
 	Nsrc_pairs = Nsrc ^ 2; 
 	Nsites = Nsrc / 2; % One site contains two dipoles
@@ -29,10 +29,13 @@ function [X,Aidx] = IrMxNE(lambda, G_small, CT, CT2)
    		 G_small(:,range_i(2)) = G_small(:,range_i(2))/norm(G_small(:,range_i(2)));
 	end;
 
+	A_reduced = [];
 	X_prev_active = [];	% Matrix of signal sources; 
 	X_next_active = [];	% Matrix of signal sources; 
 	suppX_next = [];
 	suppX_prev = [];
+	G_a = zeros(Nch* Nch , 4);
+	X_a = zeros(4, T);
 	w = ones(Nsite_pairs, 1); 	% Init weights vector
 
 	% lambda = 0.08;		% Regularization parameter
@@ -46,6 +49,11 @@ function [X,Aidx] = IrMxNE(lambda, G_small, CT, CT2)
 	for k = 1:K
 % ------------------------------------------------------------------------------- %
 		ActSetChunk = 25;
+		Res = M_real;
+		A = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
+		if isempty(A)
+			break;
+		end
 		fprintf('Calculating max l(s)...\n');
 		l(Nsite_pairs) = 0;
 	% To accelerate calculation on the second and subsequent iterations making use of the reduced structurre of G when k~=1
@@ -70,20 +78,19 @@ function [X,Aidx] = IrMxNE(lambda, G_small, CT, CT2)
  %  ------------------------------------------------------------------------------ %
 		% mu = ones(Nsrc_pairs, 1) / 1000;
 		% X = zeros(Nsrc_pairs, T);
-		Res = M_real;
-		A = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
-		if k == 1
-			while isempty(A) 
-				lambda = lambda / 2;
-				fprintf('lambda reduced to %f\n', lambda);
-				A = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
-			end
-		elseif k ~= 1
-			if isempty(A)
-				fprintf('A is empty');
-				break;
-			end
-		end
+		
+		% if k == 1
+		% 	while isempty(A) 
+		% 		lambda = lambda / 2;
+		% 		fprintf('lambda reduced to %f\n', lambda);
+		% 		A = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
+		% 	end
+		% elseif k ~= 1
+		% 	if isempty(A)
+		% 		fprintf('A is empty');
+		% 		break;
+		% 	end
+		% end
 		A_reduced = [];
 		X_a_reduced = [];
 		for i = 1:100
@@ -157,9 +164,17 @@ function [X,Aidx] = IrMxNE(lambda, G_small, CT, CT2)
 		suppX_prev = suppX_next;
 	end
 
-	
+	N1 =  norm(M_real - G_a * X_a, 'fro');
+	actSites = size(X_next_active,1) / 4;
+	N2 = 0;
+	range = 1:4;
+	for s = 1:actSites
+		N2 = N2 + norm(X_a(range,:), 'fro');
+		range = range + 4; 
+	end
+
 	toc(timerOn);
 	lambda_str = num2str(lambda);
-	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active');
+	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active', 'N1', 'N2');
     X = X_next_active;
     Aidx = A_reduced;
