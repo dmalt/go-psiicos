@@ -19,23 +19,28 @@ function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, mu)
 	R = M_ - G * Y_prev;
 	T = size(M_,2);
 	S = size(G,2) / 4;
+	eta = 2;
 	fprintf('BCD');
 	tic;
 	
 	for i = 1:I
-        range = 1:4;
-		for s = 1:S
+		s = randint(1,1,[1,S]);
+        range = 4 * s - 3:4 * s;
+		% for s = 1:S
 			Y_next(range,:) = Y_prev(range,:) + mu * G(:,range)' *	R;
 			Y_next(range,:) = Y_next(range,:) * max(1 -  mu * lambda / (norm( Y_next(range,:), 'fro' )  ), 0);
 			R = R - G(:,range) * ( Y_next(range,:) - Y_prev(range,:) );
             Y_prev = Y_next;
-			range = range + 4;
+			% range = range + 4;
+		% end
+		
+% ------------------------------------------------------------------------------------ %
+		
+		% eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
+% ------------------------------------------------------------------------------------ %
+		if mod(i,4*S) == 0
+			eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
 		end
-		
-% ------------------------------------------------------------------------------------ %
-		
-		eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
-% ------------------------------------------------------------------------------------ %
 		if i == 1
 			fprintf('\nStarting with eta = %f\n', eta);
 		end
