@@ -8,7 +8,7 @@ function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
     DEBUG = 0;
 % -------------------------------------------------------------------------- %
 	% M_abs = abs(M);
-	if nargin < 4 
+	if nargin < 5 
 		CT2 = [];
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
