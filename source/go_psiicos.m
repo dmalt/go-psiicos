@@ -3,7 +3,7 @@
  % G_small - forward model matrix in physical space
  % CT - cross-spectrum of interest
  % CT2 - cross-spectrum we want project from
-function [X,Aidx] = IrMxNE(lambda, G_small, CT, CT2)
+function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
 	% Initialization
     DEBUG = 0;
 % -------------------------------------------------------------------------- %
@@ -48,7 +48,7 @@ function [X,Aidx] = IrMxNE(lambda, G_small, CT, CT2)
 	timerOn = tic;
 	for k = 1:K
 % ------------------------------------------------------------------------------- %
-		ActSetChunk = 25;
+		% ActSetChunk = 500;
 		Res = M_real;
 		A = ActiveSet(G_small, Res, lambda, w, k, ActSetChunk);
 		if isempty(A)
