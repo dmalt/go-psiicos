@@ -25,9 +25,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mwSize Nsrc_sq  = mxGetN(prhs[0]);
 	double* G 		= mxGetPr(prhs[0]);
  
- 	mwSize Ntime  	= mxGetN(prhs[1]);
+ 	mwSize Ntime  	= mxGetM(prhs[1]);
  	double* X 		= mxGetPr(prhs[1]);
- 	double* M_  		= mxGetPr(prhs[2]);
+ 	double* M_  	= mxGetPr(prhs[2]);
  	double lambda 	= mxGetScalar(prhs[3]);
  	double epsilon 	= mxGetScalar(prhs[4]);
  	double mu 		= mxGetScalar(prhs[5]);
@@ -52,12 +52,11 @@ mwSize BlockCoorDescent(mwSize Nsrc_sq, mwSize Nsen_sq, mwSize Ntime,\
 	cblas_dcopy(Nsrc_sq * Ntime, Y_p, 1, Y_n, 1);
 	double* R = mxCalloc(Nsen_sq * Ntime, sizeof(double));
 	cblas_dcopy(Nsen_sq * Ntime, M_, 1, R, 1);
-	cblas_dgemm(CblasColMajor, CblasTrans, CblasTrans,\
-				 Nsen_sq, Ntime, Nsrc_sq , -1., Y_p, Ntime, G, Nsrc_sq,  1., R, Nsen_sq);
+	cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans, Nsen_sq, Ntime, Nsrc_sq , -1.,  G, Nsen_sq, Y_p, Ntime,  1., R, Nsen_sq);
 	mwSize i;
 	for (i = 0; i < Nsen_sq * Ntime; ++i)
 	{
-		mexPrintf("%f\n", R[i]);
+		mexPrintf("R[i] = %f\n", R[i]);
 	}
 
 	mexPrintf("BCD\n");
