@@ -100,10 +100,11 @@ end
 
 
 collim = [0,15e-3];
-return;
+% return;
 CT2 = ConData{1}.CrossSpecTime;
 ncomp = 5;
 X_res = cell(1,numfiles)
+M_res = cell(1,numfiles)
 cd(gopsiicosFolder);
 cd ./source ; 
 for k=1:numfiles
@@ -114,6 +115,7 @@ for k=1:numfiles
     [Mu Ms Mv] = svd(M_abs);
     X_ = mydata{k}.X;
     X_res{k} = X_ * Mv(:,1:ncomp)';
+    M_res{k} = M_abs;
 end
 
 cd(gopsiicosFolder);
