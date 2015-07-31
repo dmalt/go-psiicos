@@ -71,16 +71,17 @@ double BlockCoorDescent(mwSize Nsrc_sq, mwSize Nsen_sq, mwSize Ntime,\
 						 double* rYout, double* iYout)
 {
 
-	mexPrintf("Hello!\n");
+	/*mexPrintf("Hello!\n");*/
+	openblas_set_num_threads(8);
 	mwSize i;
-	mwSize maxIter = 10;  /*One million */
+	mwSize maxIter = 1e6;  /*One million */
 	mwSize S = Nsrc_sq / 4; /*Need to check that Nsr_sq is divisible by 4*/
 	double* rY_n = mxCalloc(Nsrc_sq * Ntime, sizeof(double));
 	double* iY_n = mxCalloc(Nsrc_sq * Ntime, sizeof(double));
 	double* Y_n = mxCalloc(Nsrc_sq * Ntime * 2, sizeof(double));
-	mexPrintf("Hello!\n");
+	/*mexPrintf("Hello!\n");*/
 	cblas_dcopy(Nsrc_sq * Ntime, rY_p, 1, rY_n, 1);
-	mexPrintf("Hello!\n");
+	/*mexPrintf("Hello!\n");*/
 	
 	if(iY_p == NULL)
 	{
@@ -189,36 +190,63 @@ double BlockCoorDescent(mwSize Nsrc_sq, mwSize Nsen_sq, mwSize Ntime,\
 			{
 				mexPrintf("rY_n[i] = %f\n", rY_n[i]);
 			}*/
-		cblas_dcopy(Nsrc_sq * Ntime, rY_n, 1, &Y_n[0], 1);
-		cblas_dcopy(Nsrc_sq * Ntime, iY_n, 1, &Y_n[Nsrc_sq * Ntime], 1);
-
+		for (i = 0; i < Nsrc_sq; ++i)
+		{		
+			cblas_dcopy(Ntime, &rY_n[i * Ntime], 1, &Y_n[2 * i * Ntime], 1);
+			cblas_dcopy(Ntime, &iY_n[i * Ntime], 1, &Y_n[(2 * i + 1) * Ntime], 1);
+		}
 		cblas_dcopy(Nsen_sq * Ntime, rR, 1, &R[0], 1);
 		cblas_dcopy(Nsen_sq * Ntime, iR, 1, &R[Nsen_sq * Ntime], 1);
+		/*for ( i = 0; i < 2* Ntime *  Nsrc_sq; ++i)
+			{
+				mexPrintf("Y_n[i] = %f\n", Y_n[i]);
+			}*/
 		/*for ( i = 0; i < Ntime *  Nsen_sq * 2; ++i)
 			{
 				mexPrintf("M_[i] = %f\n", M_[i]);
 			}*/
-		for (i = 0; i < Nsen_sq * Ntime * 2; ++i)
+	/*	for (i = 0; i < Nsen_sq * Ntime * 2; ++i)
 		{
 			mexPrintf("R[i] = %f\n", R[i]);
-		}
-		/*if(!(iter % 200 * S))
-		{*/
+		}*/
+			/*	for (i = 0; i < Nsrc_sq * Nsen_sq; ++i)
+		{
+			mexPrintf("G = %f\n",G[i]);
+		}*/
+		/*	mexPrintf("Ntime = %d, Nsen_sq = %d, S = %d, lambda = %f ", Ntime, Nsen_sq, S, lambda );*/
+		if(!(iter % 20 * S))
+		{
 			eta  = CalcDualGap( Ntime * 2, Nsen_sq, S, lambda, M_, G, Y_n, R);
-			mexPrintf("eta = %f\n", eta);
-		/*}*/
+			
+		}
+		/*if(!(iter % 10000))
+			mexPrintf("eta = %f\n", eta);*/
 		if(eta < eps)
 			break;
 	}
 	cblas_dcopy(Nsrc_sq * Ntime, rY_n, 1, rYout, 1);
 	cblas_dcopy(Nsrc_sq * Ntime, iY_n, 1, iYout, 1);
 	return iter;
-}
+} /* --- BlockCoorDescent --- */
 
 
 double CalcDualGap(mwSize Ntime, mwSize Nsen_sq, mwSize S, double lambda,\
 				 double * M, double * G, double * X, double * R)
 {
+	/*mexPrintf("Ntime = %d, Nsen_sq = %d, S = %d, lambda = %f ", Ntime, Nsen_sq, S, lambda );*/
+	mwSize i;
+	/*for ( i = 0; i < Ntime *  Nsen_sq; ++i)
+			{
+				mexPrintf("M[i] = %f\n", M[i]);
+			}*/
+	/*for (i = 0; i < S*4 * Nsen_sq; ++i)
+	{
+		mexPrintf("G = %f\n",G[i]);
+	}*/
+	/*for ( i = 0; i < Ntime *  S * 4; ++i)
+	{
+		mexPrintf("X[i] = %f\n", X[i]);
+	}*/
 	mwSize src, sen, t;
 	double sigma = 0.;
 	double * B = (double *)mxMalloc(sizeof(double) * S);
@@ -235,10 +263,16 @@ double CalcDualGap(mwSize Ntime, mwSize Nsen_sq, mwSize S, double lambda,\
 		dG_s = &G[Nsen_sq * src * 4];
 		X_s = &X[Ntime * src * 4];
 		/* G(:,range)' * R: */
-		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, 4, Ntime, Nsen_sq , 1, dG_s, Nsen_sq, R, Nsen_sq, 0, temp, 4);
+		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, 4, Ntime, Nsen_sq , 1., dG_s, Nsen_sq, R, Nsen_sq, 0., temp, 4);
 		B[src] = cblas_dnrm2(4 * Ntime, temp, 1);
 		/*mexPrintf("%f\n", B[src]);*/
+		/*for (i = 0; i < Ntime * 4; ++i)
+		{
+			mexPrintf("X_s[i] = %0.6f\n", X_s[i]);
+		}
+		mexPrintf("\n");*/
 		sigma += cblas_dnrm2(4 * Ntime, X_s, 1); 
+		/*mexPrintf("src = %d,sigma = %f\n", src, sigma);*/
 	}
 	C = max_array(B, S) / lambda;
 	/*mexPrintf("%f\n", C);
