@@ -81,18 +81,9 @@ end;
 cd(gopsiicosFolder);
 cd ./output/bootstrap
 
-figure;
-hctx  = trisurf(Ctx.Faces,Ctx.Vertices(:,1),Ctx.Vertices(:,2),Ctx.Vertices(:,3),'FaceColor',[0.1,0.51,1], 'EdgeColor','none','FaceAlpha', 0.1);
-hold on;
 
-camlight left; lighting phong
-camlight right; 
-hold on;
- % plot3(XYZGen(:,1), XYZGen(:,2),XYZGen(:,3),'r');
-cols = ['g','r','m','y','k','b'];
 
 R = ConData{1}.HM_LR.GridLoc;%GLowRes.GridLoc;
-Dmax = 0.02;
 % NetworkPairIndex{2} = [1,2,3];
 NPI = [1, 2, 3];  %NetworkPairIndex{2};
 % create binary arrays indicators for each network from NPI 
@@ -106,48 +97,10 @@ for k=1:numfiles
 	A = [A,mydata{k}.A];
 end
 % B = setdiff(A, unique(A));
-occ = zeros(size(A));
-for i = 1:length(A)
-	occ(i) = sum(A == A(i));
-end
-B = A(occ>0);
-Result = [(mod(B,Nsites))', ((B - mod(B,Nsites)) / Nsites+ 1)'];
-[Npairs, dummy] = size(Result);
-adjMat = zeros(Npairs,Npairs);
-Dpair = 0.013;
-for p1 = 1:Npairs
-    for p2 = p1:Npairs
-        if norm(R(Result(p1,1),:) - R(Result(p2,1),:)) < Dpair && norm(R(Result(p1,2),:) - R(Result(p2,2),:)) < Dpair
-            adjMat(p1,p2) = 1;
-            adjMat(p2,p1) = 1;
-        end
-    end
-end
-Result ;
-N = size(Result,1);
-i = 1;
-while(~isempty(Result))
-    if length(nonzeros(bfs(adjMat,i) > 0)) > 10
-        % Result(i,:)
-        clust = Result(bfs(adjMat,i) > -1,:);
-        drawset(clust, R);
-        
-        Result = Result(bfs(adjMat,i) == -1,:);
-        adjMat = adjMat(bfs(adjMat,i) == -1, bfs(adjMat,i) == -1);
-    	% L1 = line( R(Result(i,:), 1), R(Result(i,:),2), R(Result(i,:),3) );
-    	% plot3( R(Result(i,1), 1), R(Result(i,1),2), R(Result(i,1),3), 'c.', 'Markersize', 40 );
-     %    plot3( R(Result(i,2), 1), R(Result(i,2),2), R(Result(i,2),3), 'c.', 'Markersize', 40 );
-    	% set(L1, 'Color', 'c', 'linewidth',2);
-        % i = 1;
-    else
-        Result = Result(2:end,:);
-        adjMat = adjMat(2:end,2:end);
-        % i = i + 1;
-    end
-end
-hold on;
-collim = [0,15e-3];
 
+
+collim = [0,15e-3];
+return;
 CT2 = ConData{1}.CrossSpecTime;
 ncomp = 5;
 X_res = cell(1,numfiles)
