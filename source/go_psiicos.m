@@ -8,6 +8,8 @@ function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
     DEBUG = 0;
 % -------------------------------------------------------------------------- %
 	% M_abs = abs(M);
+	 setenv('OPENBLAS_NUM_THREADS', '1');
+	 setenv('OMP_NUM_THREADS', '8');
 	if nargin < 5 
 		CT2 = [];
 	end
@@ -71,7 +73,7 @@ function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
 		end
 		matlabpool close;
 		mu = 1 / max(l);
-
+		% mu = 0.5
 		fprintf('Done.\n');	
 		fprintf('mu = %f\n', mu );
 		% mu(support(l)) = 1. ./  (5*l(support(l))); 	
@@ -175,6 +177,7 @@ function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
 
 	toc(timerOn);
 	lambda_str = num2str(lambda);
-	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'A_reduced','X_next_active', 'N1', 'N2');
-    X = X_next_active;
+	X = X_next_active * Mv(:,1:ncomp)';
     Aidx = A_reduced;
+	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'Aidx','X', 'N1', 'N2');
+   
