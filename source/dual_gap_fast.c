@@ -40,26 +40,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 double CalcDualGap(mwSize Ntime, mwSize Nsen_sq, mwSize S, double lambda,\
 				 double * M, double * G, double * X, double * R)
 {
+	/*mexPrintf("Ntime = %d, Nsen_sq = %d, S = %d, lambda = %f ", Ntime, Nsen_sq, S, lambda );*/
+	mwSize i;
+	/*for ( i = 0; i < Ntime *  Nsen_sq; ++i)
+			{
+				mexPrintf("M[i] = %f\n", M[i]);
+			}*/
+	/*for (i = 0; i < S*4 * Nsen_sq; ++i)
+	{
+		mexPrintf("G = %f\n",G[i]);
+	}*/
+	/*for ( i = 0; i < Ntime *  S * 4; ++i)
+	{
+		mexPrintf("X[i] = %f\n", X[i]);
+	}*/
 	mwSize src, sen, t;
 	double sigma = 0.;
 	double * B = (double *)mxMalloc(sizeof(double) * S);
 	double * R_ = (double *)mxMalloc(sizeof(double) * Nsen_sq * Ntime);
 	double * temp = (double *)mxMalloc(Nsen_sq * Ntime * sizeof(double));
 	double C = 0.;
-	double * G_s = (double *)mxMalloc(sizeof(double) * Nsen_sq * 4); /* G_s corresponds to topography of two interacting sites on cortex, 
+	double * dG_s; /*= (double *)mxMalloc(sizeof(double) * Nsen_sq * 4);*/ /* dG_s corresponds to topography of two interacting sites on cortex, 
 	i.e. two interacting pairs of dipoles*/
 	double maxC_1 = 1.;
-	double * X_s = (double *)mxMalloc(sizeof(double) * Ntime * 4);
+	double * X_s;/*= (double *)mxMalloc(sizeof(double) * Ntime * 4);*/
 	/*double * temp =  */
 	for (src = 0; src < S; ++src)
 	{
-		G_s = &G[Nsen_sq * src * 4];
+		dG_s = &G[Nsen_sq * src * 4];
 		X_s = &X[Ntime * src * 4];
 		/* G(:,range)' * R: */
-		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, 4, Ntime, Nsen_sq , 1, G_s, Nsen_sq, R, Nsen_sq, 0, temp, 4);
+		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, 4, Ntime, Nsen_sq , 1., dG_s, Nsen_sq, R, Nsen_sq, 0., temp, 4);
 		B[src] = cblas_dnrm2(4 * Ntime, temp, 1);
 		/*mexPrintf("%f\n", B[src]);*/
+		/*for (i = 0; i < Ntime * 4; ++i)
+		{
+			mexPrintf("X_s[i] = %0.6f\n", X_s[i]);
+		}
+		mexPrintf("\n");*/
 		sigma += cblas_dnrm2(4 * Ntime, X_s, 1); 
+		/*mexPrintf("src = %d,sigma = %f\n", src, sigma);*/
 	}
 	C = max_array(B, S) / lambda;
 	/*mexPrintf("%f\n", C);
@@ -80,6 +100,10 @@ double CalcDualGap(mwSize Ntime, mwSize Nsen_sq, mwSize S, double lambda,\
 	mexPrintf("normR_ = %f\n", normR_);
 	mexPrintf("sigma = %f\n", sigma);*/
 	double eta = 0.5 * normR * normR + lambda * sigma + 0.5 * normR_ * normR_ - R_dotM;
+	mxFree(B);
+	mxFree(R_);
+	mxFree(temp);
+
 	return eta;
 	/*cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, Nsen_sq, Ntime, Nsrc_sq, 1, G, Nsen_sq, X, Nsrc_sq, 0, temp, Nsen_sq);*/
 	/* cblas_dgemv(CblasColMajor, CblasNoTrans, Nsen_sq, Nsrc_sq, 1, G, Nsen_sq, X, 1, 0., temp, 1); */
