@@ -1,5 +1,7 @@
 %% BCD - block-coordinate descent.
-% [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, k, mu)
+% [Y, iter]  = BCD(S, T, G, Y_prev, M_, lambda, epsilon, k, mu)
+% 	S - active set size;
+% 	T - number of time samples
 % 	G - forward model matrix (in pairs space)
 %	Y_prev - solution on previous iteration
 % 	M_ - EEG\MEG measurements 
@@ -11,73 +13,15 @@
 % 	Y - solution 
 % 	iter - total number of iterations made
 
-function [Y, iter]  = BCD_bckp(G, Y_prev, M_, lambda, epsilon, mu)
-	I = 1000000;			% Number of BCD iterations per one MxNE iteration
-	Y_next = Y_prev;
-	R = M_ - G * Y_prev;
-	T = size(M_,2);
-	S = size(G,2) / 4;
-	eta = 2;
-	fprintf('BCD');
+function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, mu)
 	tic;
-	% imag(R)
-	% imag(M_)
-	% ouy =imag(Y_prev);
-	for i = 1:I
-		s =  randint(1,1,[1,S]); %mod(i,S);%
-		if s == 0
-			s = S;
-		end
-        range = 4 * s - 3:4 * s;
-		% for s = 1:S
-		% Yout = Y_next(range,:)
-		% Gout = G(:,range)
-			Y_next(range,:) = Y_prev(range,:) + mu * G(:,range)' *	R;
-			% norm( Y_next(range,:), 'fro' )
-			% max(1 -  mu * lambda / (norm( Y_next(range,:), 'fro' )  ), 0) 	
-			Y_next(range,:) = Y_next(range,:) * max(1 -  mu * lambda / (norm( Y_next(range,:), 'fro' )  ), 0);
-			% imag(Y_next(range,:))% - Y_prev(range,:))
-			R = R - G(:,range) * ( Y_next(range,:) - Y_prev(range,:) );
 
-            Y_prev = Y_next;
-			% range = range + 4;
-		% end
-		
-  
-% ------------------------------------------------------------------------------------ %
-		
-		% eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
-% ------------------------------------------------------------------------------------ %
-		 if mod(i, 4 * S) == 0
-			eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
-			% [real(M_), imag(M_)]
-			% [real(R), imag(R)]
-
-			% eta  = dual_gap_fast( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)]', lambda, S, [real(R), imag(R)] )
-		end
-		if i == 1
-			fprintf('\nStarting with eta = %f\n', eta);
-		end
-		if mod(i,5000) == 0 
-			fprintf('\n eta = %f\n', eta);
-		end
-		if mod(i, 10000) == 0
-			fprintf('.');			 	 
-		end
-		if eta < epsilon
-			fprintf('\nbreaked BCD, dual it = %d', i);
-			break;
-		elseif eta > 1e8 && mod(i,1000) == 0
-			fprintf('BCD ERROR: diverged!!\n');
-			% mu = mu /10;
-			% break;
-		end
-	end
+	[Y_,it] = BCD_fast(G, conj(Y_prev'), M_, lambda, epsilon, mu);
 	fprintf('\n');
 	fprintf('Done. ');
 	toc;
 	fprintf('\n');
-	fprintf('eta_bcd = %f\n, ', eta );
-	Y = Y_next;
-	iter = i;
+	% fprintf('eta_bcd = %f\n, ', eta );
+	Y = conj(Y_');
+	iter = it;
 
