@@ -4,7 +4,7 @@
 
 double max_array(double * a, mwSize num_elements);
 void print_array(int a[], int num_elements);
-double CalcDualGap(mwSize, mwSize, mwSize, mwSize, double, double *, double *, double *, double *);
+double CalcDualGap(mwSize, mwSize, mwSize, double, double *, double *, double *, double *);
 
 double max_array(double * a, mwSize num_elements)
 {
@@ -34,10 +34,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  	plhs[0] = mxCreateDoubleScalar(mxREAL);
  	
  	double * eta = mxGetPr(plhs[0]);
- 	*eta = CalcDualGap(Nsrc_sq, Ntime, Nsen_sq, S, lambda, M, G, X, R);
+ 	*eta = CalcDualGap(Ntime, Nsen_sq, S, lambda, M, G, X, R);
 }
 
-double CalcDualGap(mwSize Nsrc_sq, mwSize Ntime, mwSize Nsen_sq, mwSize S, double lambda,\
+double CalcDualGap(mwSize Ntime, mwSize Nsen_sq, mwSize S, double lambda,\
 				 double * M, double * G, double * X, double * R)
 {
 	mwSize src, sen, t;
