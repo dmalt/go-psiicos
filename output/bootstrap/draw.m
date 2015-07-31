@@ -1,6 +1,7 @@
 % ISD = load('InputData4Simulations.mat');
 Ctx = load('/home/meg/fif_matlab/Brainstorm_db/PSIICOS/anat/0003_pran/tess_cortex_concat_2000V.mat');
 FolderName = '/home/meg/fif_matlab/Brainstorm_db/PSIICOS/data/';
+gopsiicosFolder = '/home/meg/Dropbox/Documents/Education/MEG/Osadchii/gopsiicos/gopsiicos_source/';
 ChUsed = 1:306; ChUsed(3:3:end) = [];
 TimeRange = [0, 0.700];
 Subject = '0003_pran/brainstormsubject.mat';
@@ -33,6 +34,8 @@ for c = 1:length(Conditions)
     end;
 end;
 
+cd(gopsiicosFolder);
+cd ./input;
 for c = 1:length(Conditions)
     for s = 1:length(Protocol.Study)
         if(strcmp(Protocol.Study(s).Name,Conditions{c}) & strcmp(Protocol.Study(s).BrainStormSubject,Subject))
@@ -71,9 +74,12 @@ for c = 1:length(Conditions)
         ConData{c}.CrossSpec = CrossSpectralMatrix(ConData{c}.Trials,Band,500);
         ConData{c}.CrossSpecTime = CrossSpectralTimeseries( ConData{c}.Trials);
         %ConData{c}.CrossSpec = reshape(mean(ConData{c}.CrossSpecTime,2),Nch,Nch);
+
         fprintf('-> Done\n' ); 
     end;
 end;
+cd(gopsiicosFolder);
+cd ./output/bootstrap
 
 figure;
 hctx  = trisurf(Ctx.Faces,Ctx.Vertices(:,1),Ctx.Vertices(:,2),Ctx.Vertices(:,3),'FaceColor',[0.1,0.51,1], 'EdgeColor','none','FaceAlpha', 0.1);
@@ -145,6 +151,8 @@ collim = [0,15e-3];
 CT2 = ConData{1}.CrossSpecTime;
 ncomp = 5;
 X_res = cell(1,numfiles)
+cd(gopsiicosFolder);
+cd ./source ; 
 for k=1:numfiles
     CT = mydata{k}.BootsCT;
     M  = ProjOut(CT, CT2, G2dLRU) ;
@@ -155,4 +163,5 @@ for k=1:numfiles
     X_res{k} = X_ * Mv(:,1:ncomp)';
 end
 
-
+cd(gopsiicosFolder);
+cd ./output/bootstrap/;
