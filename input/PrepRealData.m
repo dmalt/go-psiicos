@@ -1,9 +1,15 @@
+%% function [ConData, G2dLRU] = PrepRealData(Subj)
+% PrepRealData: Calculate band-pass filtered cross-spectrum
+ % and reduced forward model matrices for subject Subj
+function [ConData, G2dLRU] = PrepRealData(Subj)
+
 %% Set params
+ run('/home/meg/fif_matlab/brainstorm3/brainstorm');
 FolderName = '/home/meg/fif_matlab/Brainstorm_db/PSIICOS/data/';
 ChUsed = 1:306; ChUsed(3:3:end) = [];
 TimeRange = [0, 0.700];
-Subject = '0003_pran/brainstormsubject.mat';
-%Subject = '0019_shev/brainstormsubject.mat';
+% Subject = '0003_pran/brainstormsubject.mat';
+Subject = strcat(Subj,'/brainstormsubject.mat');
 
 Conditions = {'1','4'}; % '2','4'};
 Band = [16 25];
@@ -15,11 +21,11 @@ Protocol = bst_get('ProtocolStudies','PSIICOS');
 clear ConData;
 fprintf('Loading real data from BST database.. \n');
 %% Load data and compute cross-spectral matrix 
-ConditionsFound = 0;
+% ConditionsFound = 0;
 clear ConData;
 for c = 1:length(Conditions)
     for s = 1:length(Protocol.Study)
-        if(strcmp(Protocol.Study(s).Name,Conditions{c}) & strcmp(Protocol.Study(s).BrainStormSubject,Subject))
+        if(strcmp(Protocol.Study(s).Name,Conditions{c}) && strcmp(Protocol.Study(s).BrainStormSubject,Subject))
             fprintf('Found study condition %s %s\n ', Conditions{c},Protocol.Study(s).BrainStormSubject); 
             for hm = 1:length(Protocol.Study(s).HeadModel)
                 if(strcmp(Protocol.Study(s).HeadModel(hm).Comment,'Overlapping spheres_HR'))
@@ -118,20 +124,7 @@ for c = 1:length(Conditions)
         fprintf('-> Done\n' ); 
     end;
 end;
-BootsTrials = zeros(size(ConData{2}.Trials));
 
-for it=1:100
-    resample = randint(1,ConData{2}.NumTrials,[1,ConData{2}.NumTrials]);
-    for tr = 1:ConData{2}.NumTrials
-        BootsTrials(:,:,tr) =  ConData{2}.Trials(:,:,resample(tr));
-    end
-    BootsCT = CrossSpectralTimeseries( BootsTrials);
-    cd ../source/;
-    [X,A] = go_psiicos(G2dLRU, BootsCT, ConData{1}.CrossSpecTime);
-    cd ../input/;
-    it_str = num2str(it);
-    save ( strcat( strcat('../output/Output_', it_str), '.mat'), 'A', 'X', 'resample', 'BootsCT');
-end
 %[ Cs, Result, CTp, IND, Upwr,SubC] = RAPPSIICOSTime2CondSubcorr( ConData{2}.CrossSpecTime,[],20, G2dLRU, G2d0LRU, R,350, 5,1);
 R = ConData{1}.HM_LR.GridLoc;
 % [ Cs2min1, Result, CTp, IND, Upwr] = RAPPSIICOSTime2Cond( ConData{2}.CrossSpecTime, ConData{1}.CrossSpecTime,20, G2dLRU, G2d0LRU, R,350, 5,1);
