@@ -1,7 +1,7 @@
 %% dual_gap: returns primal-dual gap
 function eta = dual_gap(M, G, X, lambda, S, R)
 	% B = sqrt(max(diag(G' * R * R' * G)))/ lambda;
-	B(S) = 0;
+	B = zeros(S,1);
 	sigma = 0;
 	range = 1:4;
 	for s=1:S
