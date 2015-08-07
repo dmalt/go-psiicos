@@ -3,13 +3,13 @@
  % G_small - forward model matrix in physical space
  % CT - cross-spectrum of interest
  % CT2 - cross-spectrum we want project from
-function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
+function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2)
 	% Initialization
     DEBUG = 0;
 % -------------------------------------------------------------------------- %
 	% M_abs = abs(M);
 	 setenv('OPENBLAS_NUM_THREADS', '1');
-	 setenv('OMP_NUM_THREADS', '8');
+	 setenv('OMP_NUM_THREADS', '4');
 	if nargin < 5 
 		CT2 = [];
 	end
@@ -61,19 +61,26 @@ function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
 	% To accelerate calculation on the second and subsequent iterations making use of the reduced structurre of G when k~=1
 		if k == 1 
 			S = Nsite_pairs; 
-			idx = @(x) x;
+			if matlabpool('size') == 0
+				matlabpool open;
+			end
+			parfor s = 1:S
+				G_s = G_pair(  s, G_small, w(s)  );
+				l(s) = norm(G_s' * G_s, 'fro');
+			end
+			if matlabpool('size') > 0
+				matlabpool close;
+			end
 		elseif k ~= 1
 			idx = support(w);
 			[dummy, S] = size(idx);  
+			for s = 1:S
+				G_s = G_pair(  idx(s), G_small, w( idx(s) )  );
+				l(s) = norm(G_s' * G_s, 'fro');
+			end
 		end
-		matlabpool('open', 4);
-		parfor s = 1:S
-			G_s = G_pair(  idx(s), G_small, w( idx(s) )  );
-			l(s) = norm(G_s' * G_s, 'fro');
-		end
-		matlabpool close;
 		mu = 1 / max(l);
-		% mu = 0.5
+		 % mu = 0.499257
 		fprintf('Done.\n');	
 		fprintf('mu = %f\n', mu );
 		% mu(support(l)) = 1. ./  (5*l(support(l))); 	
@@ -106,7 +113,9 @@ function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
 			[X_a, bcd_iter] = BCD(G_a, X_a, M_real, lambda, epsilon, mu);
 			% X = zeros(Nsrc_pairs,T);
 			A_reduced = A(1, supp_d(X_a)); 
-			[(mod(A,Nsites))', ((A - mod(A,Nsites)) / Nsites+ 1)']
+			if k ~= 1
+				disp([(mod(A,Nsites))', ((A - mod(A,Nsites)) / Nsites+ 1)']);
+			end
 			X_a_reduced = X_a(ind4(supp_d(X_a)),:);
 			Res = M_real - G_a * X_a;
 			% X(A_reduced,:) = X_a_reduced;
@@ -144,7 +153,7 @@ function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
 
 		% --- Calculate norm of difference between solutions on current and previous step ---%
 		suppUnion = sort(union(suppX_next, suppX_prev));
-		[dummy, sizeSuppUnion] = size(suppUnion); 
+		sizeSuppUnion = length(suppUnion); 
 		X_next_exp = zeros(sizeSuppUnion * 4,T);
 		X_prev_exp = zeros(sizeSuppUnion * 4,T);
 		[dummy, nonzero_idx_next] = intersect(suppUnion, suppX_next);
@@ -174,7 +183,9 @@ function [X,Aidx] = IrMxNE(lambda, ActSetChunk, G_small, CT, CT2)
 		N2 = N2 + norm(X_a(range,:), 'fro');
 		range = range + 4; 
 	end
-
+	if matlabpool('size') > 0
+		matlabpool close;
+	end
 	toc(timerOn);
 	lambda_str = num2str(lambda);
 	X = X_next_active * Mv(:,1:ncomp)';
