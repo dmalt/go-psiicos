@@ -1,9 +1,9 @@
 
 path(path,'../../input/');
-Subj = '0003_pran';
+Subj = '0108_bami';
 [ConData, G2dLRU] = PrepRealData(Subj);
 brainstormDir = '/home/meg/fif_matlab/Brainstorm_db/'
-anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_concat_2000V.mat');
+anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_pial_low_2003V.mat');
 Ctx = load(anatPath);
 gopsiicosFolder = '/home/meg/Dropbox/Documents/Education/MEG/Osadchii/gopsiicos/gopsiicos_source'
 
@@ -14,13 +14,15 @@ NPI = [1, 2, 3];  %NetworkPairIndex{2};
 % create binary arrays indicators for each network from NPI 
 Nsites = size(R, 1);
 A = [];
-subjBootstrDir = strcat(gopsiicosFolder, '/output/','bootstrap_',Subj,'/');
+subjBootstrDir = strcat(gopsiicosFolder, '/output/','bootstr_',Subj,'/');
 out = dir(strcat(subjBootstrDir, 'Output_*'));
 numfiles = length(out);
 mydata = cell(1, numfiles);
 for k=1:numfiles
 	mydata{k} = load(strcat(subjBootstrDir, out(k).name));
-	A = [A,mydata{k}.A];
+    if length(mydata{k}.A) < 100
+    	A = [A,mydata{k}.A];
+    end
 end
 % B = setdiff(A, unique(A));
 
