@@ -3,7 +3,7 @@
 % A - set of numbers of pairs which want to draw 
 % R - matrix of coordinates of grid nodes locations
 % col - color specification
-function drawSingleRun(A, R, col)
+function drawSingleRun(A, R, col, Ctx)
  % col = randint(1,3);
  figure;
 hctx  = trisurf(Ctx.Faces,Ctx.Vertices(:,1),Ctx.Vertices(:,2),Ctx.Vertices(:,3),'FaceColor',[0.1,0.51,1], 'EdgeColor','none','FaceAlpha', 0.1);
