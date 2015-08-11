@@ -1,5 +1,7 @@
 %% IrMxNE: linear regression with mixed norm regularization;
+ % function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2)
  % lambda - regularization parameter
+ % ActSetChunk - chunko of sources to be added to the active set on each iteration
  % G_small - forward model matrix in physical space
  % CT - cross-spectrum of interest
  % CT2 - cross-spectrum we want project from
