@@ -71,11 +71,14 @@ double BlockCoorDescent(mwSize Nsrc_sq, mwSize Nsen_sq, mwSize Ntime,\
 						 double* rYout, double* iYout)
 {
 	mwSize i;
-	mwSize maxIter = 1e6;  /*One million */
+	mwSize maxIter = 2e6;  /*One million */
 	mwSize S = Nsrc_sq / 4; /*Need to check that Nsr_sq is divisible by 4*/
-
+	double* rY_n = mxCalloc(Nsrc_sq * Ntime, sizeof(double));
+	double* iY_n = mxCalloc(Nsrc_sq * Ntime, sizeof(double));
 	double* Y_n = mxCalloc(Nsrc_sq * Ntime * 2, sizeof(double));
-	double* Y_p = mxCalloc(Nsrc_sq * Ntime * 2, sizeof(double));
+
+	cblas_dcopy(Nsrc_sq * Ntime, rY_p, 1, rY_n, 1);
+
 	
 	if(iY_p == NULL)
 	{
@@ -83,67 +86,85 @@ double BlockCoorDescent(mwSize Nsrc_sq, mwSize Nsen_sq, mwSize Ntime,\
 		for ( i = 0; i < Ntime *  Nsrc_sq; ++i)
 			iY_p[i] = 0.;
 	}
-/* Concatenate real and imag parts of Y; need a loop because we input Y transposed and it gets tricky to cat real and imag parts*/
-	for (i = 0; i < Nsrc_sq; ++i)
-	{		
-		cblas_dcopy(Ntime, &rY_p[i * Ntime], 1, &Y_n[2 * i * Ntime], 1);
-		cblas_dcopy(Ntime, &iY_p[i * Ntime], 1, &Y_n[(2 * i + 1) * Ntime], 1);
-		cblas_dcopy(Ntime, &rY_p[i * Ntime], 1, &Y_p[2 * i * Ntime], 1);
-		cblas_dcopy(Ntime, &iY_p[i * Ntime], 1, &Y_p[(2 * i + 1) * Ntime], 1);
-	}
+	cblas_dcopy(Nsrc_sq * Ntime, iY_p, 1, iY_n, 1);
 
+	double* rR = mxCalloc(Nsen_sq * Ntime, sizeof(double));
+	double* iR = mxCalloc(Nsen_sq * Ntime, sizeof(double));
+	double* R = mxCalloc(Nsen_sq * Ntime * 2, sizeof(double));
 	double* M_ = mxCalloc(Nsen_sq * Ntime * 2, sizeof(double));
 	cblas_dcopy(Nsen_sq * Ntime, rM_, 1, &M_[0], 1);
 	cblas_dcopy(Nsen_sq * Ntime, iM_, 1, &M_[Nsen_sq * Ntime], 1);
 
-	double* R = mxCalloc(Nsen_sq * Ntime * 2, sizeof(double));
-	cblas_dcopy(Nsen_sq * Ntime, rM_, 1, &R[0], 1);
-	cblas_dcopy(Nsen_sq * Ntime, iM_, 1, &R[Nsen_sq * Ntime], 1);
 
-	cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans, Nsen_sq, Ntime * 2, Nsrc_sq , -1.,  G, Nsen_sq, Y_p, Ntime * 2,  1., R, Nsen_sq);
+	cblas_dcopy(Nsen_sq * Ntime, rM_, 1, rR, 1);
+	cblas_dcopy(Nsen_sq * Ntime, iM_, 1, iR, 1);
+
+	cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans, Nsen_sq, Ntime, Nsrc_sq , -1.,  G, Nsen_sq, rY_p, Ntime,  1., rR, Nsen_sq);
+	cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans, Nsen_sq, Ntime, Nsrc_sq , -1.,  G, Nsen_sq, iY_p, Ntime,  1., iR, Nsen_sq);
 	
 	mexPrintf("BCD\n");
 	mwSize iter, src;
 	double* G_s = (double*)mxMalloc(sizeof(double) * Nsen_sq * 4);	
-	double* Y_n_s = (double*)mxMalloc(sizeof(double) * 2 * Ntime * 4);
-	double* Y_p_s = (double*)mxMalloc(sizeof(double) * 2 * Ntime * 4);
-	double* delta_Y = (double*)mxMalloc(sizeof(double) * 2 * Ntime * 4);
+	double* rY_n_s = (double*)mxMalloc(sizeof(double) * Ntime * 4);
+	double* iY_n_s = (double*)mxMalloc(sizeof(double) * Ntime * 4);                   
+	double* rY_p_s = (double*)mxMalloc(sizeof(double) * Ntime * 4);
+	double* iY_p_s = (double*)mxMalloc(sizeof(double) * Ntime * 4);
+	double* rdelta_Y = (double*)mxMalloc(sizeof(double) * Ntime * 4);
+	double* idelta_Y = (double*)mxMalloc(sizeof(double) * Ntime * 4);
 	double eta = 2.;
-	double Y_n_s_norm = 0.;
+	double rY_n_s_norm = 0.,  iY_n_s_norm = 0., Y_n_s_norm = 0.;
 	double scale = 0.;
 	for (iter = 0; iter < maxIter; ++iter)
 	{
-		src = iter % S;	
-		cblas_dcopy(4 * Ntime * 2, &Y_n[4 * Ntime * 2 * src], 1, &Y_n_s[0], 1);
-		cblas_dcopy(4 * Ntime * 2, &Y_n[4 * Ntime * 2 * src], 1, &Y_p_s[0], 1);
+		src = rand() % S;	
+		cblas_dcopy(4 * Ntime, &rY_n[4 * Ntime * src], 1, rY_n_s, 1);
+		cblas_dcopy(4 * Ntime, &iY_n[4 * Ntime * src], 1, iY_n_s, 1);
+		cblas_dcopy(4 * Ntime, &rY_n[4 * Ntime * src], 1, rY_p_s, 1);
+		cblas_dcopy(4 * Ntime, &iY_n[4 * Ntime * src], 1, iY_p_s, 1);
 		cblas_dcopy(4 * Nsen_sq, &G[4 * Nsen_sq * src], 1, G_s, 1);
 
-		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, Ntime * 2, 4, Nsen_sq, mu,  R, Nsen_sq, G_s, Nsen_sq,  1., Y_n_s, Ntime * 2);
+		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, Ntime, 4, Nsen_sq, mu,  rR, Nsen_sq, G_s, Nsen_sq,  1., rY_n_s, Ntime);
+		cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, Ntime, 4, Nsen_sq, mu,  iR, Nsen_sq, G_s, Nsen_sq,  1., iY_n_s, Ntime);
 
-		Y_n_s_norm = cblas_dnrm2(2 * Ntime * 4, Y_n_s, 1);
+		rY_n_s_norm = cblas_dnrm2(Ntime * 4, rY_n_s, 1);
+		iY_n_s_norm = cblas_dnrm2(Ntime * 4, iY_n_s, 1);
+		Y_n_s_norm = sqrt(rY_n_s_norm * rY_n_s_norm + iY_n_s_norm * iY_n_s_norm);
 		scale = fmax(1 - mu * lambda / Y_n_s_norm, 0);
 
-		cblas_dscal(2 * Ntime * 4, scale, Y_n_s, 1);
+		cblas_dscal(Ntime * 4, scale, rY_n_s, 1);
+		cblas_dscal(Ntime * 4, scale, iY_n_s, 1);
 
-		cblas_dcopy(4 * Ntime * 2, Y_n_s, 1, delta_Y, 1);
+		cblas_dcopy(4 * Ntime, rY_n_s, 1, rdelta_Y, 1);
+		cblas_dcopy(4 * Ntime, iY_n_s, 1, idelta_Y, 1);
 
-		cblas_daxpy(2 * Ntime * 4, -1., Y_p_s, 1, delta_Y, 1);
+		cblas_daxpy(Ntime * 4, -1., rY_p_s, 1, rdelta_Y, 1);
+		cblas_daxpy(Ntime * 4, -1., iY_p_s, 1, idelta_Y, 1);
 
-		cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans, Nsen_sq, Ntime * 2, 4 , -1.,  G_s, Nsen_sq, delta_Y, Ntime * 2,  1., R, Nsen_sq);
+		cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans, Nsen_sq, Ntime, 4 , -1.,  G_s, Nsen_sq, rdelta_Y, Ntime,  1., rR, Nsen_sq);
+		cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans, Nsen_sq, Ntime, 4 , -1.,  G_s, Nsen_sq, idelta_Y, Ntime,  1., iR, Nsen_sq);
 
-		cblas_dcopy(4 * Ntime * 2, Y_n_s, 1, &Y_n[4 * Ntime * 2 * src], 1);
+		cblas_dcopy(4 * Ntime, rY_n_s, 1, &rY_n[4 * Ntime * src], 1);
+		cblas_dcopy(4 * Ntime, iY_n_s, 1, &iY_n[4 * Ntime * src], 1);
+
+		for (i = 0; i < Nsrc_sq; ++i)
+		{		
+			cblas_dcopy(Ntime, &rY_n[i * Ntime], 1, &Y_n[2 * i * Ntime], 1);
+			cblas_dcopy(Ntime, &iY_n[i * Ntime], 1, &Y_n[(2 * i + 1) * Ntime], 1);
+		}
+		cblas_dcopy(Nsen_sq * Ntime, rR, 1, &R[0], 1);
+		cblas_dcopy(Nsen_sq * Ntime, iR, 1, &R[Nsen_sq * Ntime], 1);
 
 		if(!(iter % 20 * S))
-			eta  = CalcDualGap( Ntime * 2, Nsen_sq, S, lambda, M_, G, Y_n, R);	
+		{
+			eta  = CalcDualGap( Ntime * 2, Nsen_sq, S, lambda, M_, G, Y_n, R);
+			
+		}
 
 		if(eta < eps)
 			break;
 	}
-	for (i = 0; i < Nsrc_sq; ++i)
-	{		
-		cblas_dcopy(Ntime, &Y_n[2 * i * Ntime], 1, &rYout[i * Ntime], 1);
-		cblas_dcopy(Ntime, &Y_n[(2 * i + 1) * Ntime], 1, &iYout[i * Ntime], 1);
-	}
+	cblas_dcopy(Nsrc_sq * Ntime, rY_n, 1, rYout, 1);
+	cblas_dcopy(Nsrc_sq * Ntime, iY_n, 1, iYout, 1);
 	return iter;
 } /* --- BlockCoorDescent --- */
 
