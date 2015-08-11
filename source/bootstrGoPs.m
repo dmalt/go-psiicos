@@ -3,7 +3,7 @@
 function  bootstGoPs(Subj)
 
 path(path, '../input/');
-[sSubjData, G] = PrepRealData(Subj);
+[sSubjData, G2dLRU] = PrepRealData(Subj);
 BootsTrials = zeros(size(sSubjData{2}.Trials));
 
 for it=1:100
@@ -14,11 +14,11 @@ for it=1:100
     end
     BootsCT = CrossSpectralTimeseries( BootsTrials);
     cd ../source/;
-    [X,A] = go_psiicos(0.5, 500, G2dLRU, BootsCT, sSubjData{1}.CrossSpecTime);
+    [X,A] = go_psiicos(0.08, 500, G2dLRU, BootsCT, sSubjData{1}.CrossSpecTime);
     cd ../input/;
     it_str = num2str(it);
-    dirName = strcat('bootstr_',Subj);
+    dirName = strcat('bootstr_',Subj,'/');
     mkdir('../output', dirName);
     outDir = strcat('../output/', dirName);
-    save ( strcat( strcat(outDir, it_str), '.mat'), 'A', 'X', 'resample', 'BootsCT');
+    save ( strcat( strcat(outDir,'Output_', it_str), '.mat'), 'A', 'X', 'resample', 'BootsCT');
 end
