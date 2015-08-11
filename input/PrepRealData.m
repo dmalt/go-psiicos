@@ -15,7 +15,7 @@ Conditions = {'1','4'}; % '2','4'};
 Band = [16 25];
 %Band = [70 85];
 % Band = [8 12];
-Fsamp = 1000;
+Fsamp = 500;
 [b,a] = butter(5,Band/(Fsamp/2));
 Protocol = bst_get('ProtocolStudies','PSIICOS');
 clear ConData;
