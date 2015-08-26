@@ -1,8 +1,9 @@
 %% function drawSingleRun
-%  drawSingleRun(A, R, col)
+%  drawSingleRun(A, R, col, Ctx)
 % A - set of numbers of pairs which want to draw 
 % R - matrix of coordinates of grid nodes locations
 % col - color specification
+% Ctx - brainstorm-generated head model
 function drawSingleRun(A, R, col, Ctx)
  % col = randint(1,3);
  figure;
