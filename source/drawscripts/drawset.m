@@ -1,4 +1,5 @@
-
+%% function drawset(A, R, col)
+% Draws set A using grid locations R and color col
 function drawset(A, R, col)
  % col = randint(1,3);
 for i = 1:length(A)
