@@ -2,10 +2,10 @@
 path(path,'../../input/');
 Subj = '0019_shev';
 [ConData, G2dLRU] = PrepRealData(Subj);
-brainstormDir = '/home/meg/fif_matlab/Brainstorm_db/'
+brainstormDir = '/home/dmalt/fif_matlab/Brainstorm_db/'
 anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_pial_low_2000V.mat');
 Ctx = load(anatPath);
-gopsiicosFolder = '/home/meg/Dropbox/Documents/Education/MEG/Osadchii/gopsiicos/gopsiicos_source'
+gopsiicosFolder = '/home/dmalt/Dropbox/Documents/Education/MEG/Osadchii/gopsiicos/gopsiicos_source'
 
 
 R = ConData{1}.HM_LR.GridLoc;%GLowRes.GridLoc;
