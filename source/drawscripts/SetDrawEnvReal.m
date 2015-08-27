@@ -1,6 +1,7 @@
 
 path(path,'../../input/');
-Subj = '0019_shev';
+% Subj = '0019_shev';
+Subj = '0003_pran';
 [ConData, G2dLRU] = PrepRealData(Subj);
 brainstormDir = '/home/dmalt/fif_matlab/Brainstorm_db/'
 anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_pial_low_2000V.mat');
