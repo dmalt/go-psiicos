@@ -188,9 +188,9 @@ function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2)
 	if matlabpool('size') > 0
 		matlabpool close;
 	end
-	toc(timerOn);
+	exec_time = toc(timerOn);
 	lambda_str = num2str(lambda);
 	X = X_next_active * Mv(:,1:ncomp)';
     Aidx = A_reduced;
-	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'Aidx','X', 'N1', 'N2', 'lambda', 'CT', 'CT2', 'epsilon', 'tau', 'ncomp', 'ActSetChunk');
+	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'Aidx','X', 'N1', 'N2', 'lambda', 'CT', 'CT2', 'epsilon', 'tau', 'ncomp', 'ActSetChunk', 'exec_time');
    
