@@ -17,7 +17,7 @@ function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2)
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
 	M_abs = M / norm(M);
-	ncomp = 5;
+	ncomp = 10;
 	[Mu Ms Mv] = svd(M_abs);
 	M_real = M_abs * Mv(:,1:ncomp);
 	[dummy, T] = size(M_real); % Nch - number of channels, T - number of time samples
@@ -192,5 +192,5 @@ function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2)
 	lambda_str = num2str(lambda);
 	X = X_next_active * Mv(:,1:ncomp)';
     Aidx = A_reduced;
-	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'Aidx','X', 'N1', 'N2', 'lambda', 'CT', 'CT2');
+	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'Aidx','X', 'N1', 'N2', 'lambda', 'CT', 'CT2', 'epsilon', 'tau', 'ncomp', 'ActSetChunk');
    
