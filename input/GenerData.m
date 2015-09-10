@@ -1,6 +1,4 @@
-% clear all;
-% close all;
-%% Parameters block
+% function [G2dU, CrossSpecTime] = GenerData(PhaseLag, InducedScale, EvokedScale)
 %% GenerData: generates simulated data for tests 
 function [G2dU, CrossSpecTime] = GenerData(PhaseLag, InducedScale, EvokedScale)
 

@@ -1,4 +1,5 @@
 #include "mex.h"
+#include <cblas.h>
 
 void columnG_fast(mwSize p, double * G_small, double w, mwSize Nsen, mwSize Nsrc, double * G_col);
 
@@ -27,6 +28,9 @@ void columnG_fast(mwSize p, double * G_small, double w, mwSize Nsen, mwSize Nsrc
 	mwSize js = (s - is) / Nsites;
 	mwSize i, j;
 	mwSize k, l;
+
+	mwSize tcount;
+	bool cblasErrFlag = 0;
 	if(r == 0) 
 	{
 		i = 2 * is;
@@ -47,7 +51,32 @@ void columnG_fast(mwSize p, double * G_small, double w, mwSize Nsen, mwSize Nsrc
 		i = 2 * is + 1;
 		j = 2 * js + 1;
 	}
-	for (k = 0; k < Nsen; ++k)
+	/*for (k = 0; k < Nsen; ++k)
 		for (l = 0; l < Nsen; ++l)
-			G_col[k + Nsen * l] = G_small[k + Nsen * i] * G_small[l + Nsen * j] * w;
+			G_col[k + Nsen * l] = G_small[k + Nsen * i] * G_small[l + Nsen * j] * w;*/
+	/*double * G_col_ = mxCalloc(Nsen * Nsen, sizeof(double));*/
+	cblas_dger(CblasColMajor, /* you’re using row-major storage */
+           Nsen,           /* the matrix X has dx1 rows ...  */
+           Nsen,           /*  ... and dx2 columns.          */
+           w,           /* scale factor to apply to x1x2' */
+           &G_small[Nsen * i],
+           1,             /* stride between elements of x1. */
+           &G_small[Nsen * j],
+           1,             /* stride between elements of x2. */
+           G_col,
+           Nsen);          /* leading dimension of matrix */
+
+    /*for (tcount = 0; tcount < Nsen * Nsen; ++tcount)
+    {
+    	G_col_[tcount] -=G_col[tcount];
+    	if(G_col_[tcount] > 1e-6)
+    	{
+    		cblasErrFlag = 1;
+    		mexPrintf("Tes failed\n");
+    		break;
+    	}
+    }
+    if(!cblasErrFlag){
+    	mexPrintf("Test OK!\n");
+    }*/
 }

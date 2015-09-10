@@ -2,7 +2,7 @@
 
 N1 = [];
 N2 = [];
-cd ./lcurve
+cd ../../output/lcurve
 out = dir('./Output_*');
 numfiles = length(out);
 mydata = cell(1, numfiles);
