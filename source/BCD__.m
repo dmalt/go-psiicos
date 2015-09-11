@@ -12,7 +12,7 @@
 % 	iter - total number of iterations made
 
 function [Y, iter]  = BCD__(G, Y_prev, M_, lambda, epsilon, mu)
-	I = 1000000;			% Number of BCD iterations per one MxNE iteration
+	I = 2000000;			% Number of BCD iterations per one MxNE iteration
 	Y_next = Y_prev;
 	R = M_ - G * Y_prev;
 	T = size(M_,2);
@@ -33,21 +33,21 @@ function [Y, iter]  = BCD__(G, Y_prev, M_, lambda, epsilon, mu)
 % ------------------------------------------------------------------------------------ %
 		% eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
 % ------------------------------------------------------------------------------------ %
-		  if mod(i, 20 * S) == 0
+		if mod(i, 20 * S) == 0
 			eta  = dual_gap( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)], lambda, S, [real(R), imag(R)] );
 			% eta  = dual_gap_fast( [real(M_), imag(M_)], G, [real(Y_next), imag(Y_next)]', lambda, S, [real(R), imag(R)] );
-		 end
+		end
 		if mod(i, 10000) == 0
 			fprintf('.');			 	 
 		end
-		% if eta < epsilon
-		% 	fprintf('\nbreaked BCD, dual it = %d', i);
-		% 	break;
-		% elseif eta > 1e8 && mod(i,1000) == 0
-		% 	fprintf('BCD ERROR: diverged!!\n');
-			% mu = mu /10;
+		if eta < epsilon
+		 	fprintf('\nbreaked BCD, dual it = %d', i);
+		 	break;
+		elseif eta > 1e8 && mod(i,1000) == 0
+			fprintf('BCD ERROR: diverged!!\n');
+			mu = mu /10;
 			% break;
-% 		end
+		end
 	end
 	fprintf('\n');
 	fprintf('Done. ');
