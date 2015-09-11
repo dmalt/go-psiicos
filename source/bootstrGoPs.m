@@ -14,7 +14,7 @@ for it=1:100
     end
     BootsCT = CrossSpectralTimeseries( BootsTrials);
     cd ../source/;
-    [X,A] = go_psiicos(0.08, 500, G2dLRU, BootsCT, sSubjData{1}.CrossSpecTime);
+    [X,A] = go_psiicos(0.08, 500, G2dLRU, BootsCT, sSubjData{1}.CrossSpecTime, Subj);
     cd ../input/;
     it_str = num2str(it);
     dirName = strcat('bootstr_',Subj,'/');
