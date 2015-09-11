@@ -5,7 +5,8 @@
  % G_small - forward model matrix in physical space
  % CT - cross-spectrum of interest
  % CT2 - cross-spectrum we want project from
-function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2)
+ % Subj - name of a subject. If simulations, assign 'simul'.
+function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2, Subj)
 	% Initialization
     DEBUG = 0;
 % -------------------------------------------------------------------------- %
@@ -17,7 +18,7 @@ function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2)
 	end
 	M  = ProjOut(CT, CT2, G_small) ;
 	M_abs = M / norm(M);
-	ncomp = 10;
+	ncomp = 15;
 	[Mu Ms Mv] = svd(M_abs);
 	M_real = M_abs * Mv(:,1:ncomp);
 	[dummy, T] = size(M_real); % Nch - number of channels, T - number of time samples
@@ -112,7 +113,7 @@ function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2)
 			if ~isempty(nonzero_idx)
 				X_a(ind4(nonzero_idx), :) =  X_a_reduced;	
 			end
-			[X_a, bcd_iter] = BCD(G_a, X_a, M_real, lambda, epsilon, mu);
+			[X_a, bcd_iter] = BCD__(G_a, X_a, M_real, lambda, epsilon, mu);
 			% X = zeros(Nsrc_pairs,T);
 			A_reduced = A(1, supp_d(X_a)); 
 			if k ~= 1
@@ -192,5 +193,5 @@ function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2)
 	lambda_str = num2str(lambda);
 	X = X_next_active * Mv(:,1:ncomp)';
     Aidx = A_reduced;
-	save ( strcat( strcat('../output/Output_', lambda_str), '.mat'), 'Aidx','X', 'N1', 'N2', 'lambda', 'CT', 'CT2', 'epsilon', 'tau', 'ncomp', 'ActSetChunk', 'exec_time');
+	save (  strcat('../output/Output_', Subj, lambda_str, date, '.mat'), 'Aidx','X', 'N1', 'N2', 'lambda', 'CT', 'CT2', 'epsilon', 'tau', 'ncomp', 'ActSetChunk', 'exec_time', 'i', 'k');
    
