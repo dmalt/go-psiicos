@@ -1,11 +1,11 @@
 
 path(path,'../../input/');
-% Subj = '0019_shev';
-Subj = '0003_pran';
+Subj = '0019_shev';
+%Subj = '0003_pran';
 [ConData, G2dLRU] = PrepRealData(Subj);
 brainstormDir = '~/fif_matlab/Brainstorm_db/';
-% anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_pial_low_2000V.mat');
-anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_concat_2000V.mat');
+anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_pial_low_2000V.mat');
+%anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_concat_2000V.mat');
 Ctx = load(anatPath);
 gopsiicosFolder = '~/Dropbox/Documents/Education/MEG/Osadchii/gopsiicos/gopsiicos_source'
 
