@@ -193,5 +193,5 @@ function [X,Aidx] = go_psiicos(lambda, ActSetChunk, G_small, CT, CT2, Subj)
 	lambda_str = num2str(lambda);
 	X = X_next_active * Mv(:,1:ncomp)';
     Aidx = A_reduced;
-	save (  strcat('../output/Output_', Subj, lambda_str, date, '.mat'), 'Aidx','X', 'N1', 'N2', 'lambda', 'CT', 'CT2', 'epsilon', 'tau', 'ncomp', 'ActSetChunk', 'exec_time', 'i', 'k');
+	save (  strcat('../output/Output_', Subj,'_', lambda_str,'_', date, '.mat'), 'Aidx','X', 'N1', 'N2', 'lambda', 'CT', 'CT2', 'epsilon', 'tau', 'ncomp', 'ActSetChunk', 'exec_time', 'i', 'k');
    
