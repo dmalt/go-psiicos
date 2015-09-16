@@ -4,8 +4,8 @@
 function [ConData, G2dLRU] = PrepRealData(Subj)
 
 %% Set params
- run('/home/meg/fif_matlab/brainstorm3/brainstorm');
-FolderName = '/home/meg/fif_matlab/Brainstorm_db/PSIICOS/data/';
+ run('~/fif_matlab/brainstorm3/brainstorm');
+FolderName = '~/fif_matlab/Brainstorm_db/PSIICOS/data/';
 ChUsed = 1:306; ChUsed(3:3:end) = [];
 TimeRange = [0, 0.700];
 % Subject = '0003_pran/brainstormsubject.mat';
