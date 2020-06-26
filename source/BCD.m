@@ -1,5 +1,5 @@
 function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, mu)
-%% BCD: block-coordinate descent.
+% BCD: block-coordinate descent.
 % FORMAT:
 %   [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, k, mu)
 % INPUTS:
@@ -15,6 +15,7 @@ function [Y, iter]  = BCD(G, Y_prev, M_, lambda, epsilon, mu)
 %   iter           - total number of iterations
 % ____________________________________________________________________________
 % Dmitrii Altukhov, dm.altukhov@ya.ru
+
     tic;
     [Y_,it] = BCD_fast(G, conj(Y_prev'), M_, lambda, epsilon, mu);
     fprintf('\n');

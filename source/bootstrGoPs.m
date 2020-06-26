@@ -1,7 +1,7 @@
-%% bootstGoPs: Launches bootstrap for a subject Subj
-% function bootstGoPs(Subj)
 function  bootstGoPs(Subj)
 
+%% bootstGoPs: Launches bootstrap for a subject Subj
+% function bootstGoPs(Subj)
 path(path, '../input/');
 [sSubjData, G2dLRU] = PrepRealData(Subj);
 BootsTrials = zeros(size(sSubjData{2}.Trials));

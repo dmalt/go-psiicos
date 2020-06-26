@@ -1,11 +1,12 @@
 
 path(path,'../../input/');
-Subj = '0019_shev';
-%Subj = '0003_pran';
+ % Subj = '0019_shev';
+Subj = '0003_pran';
 [ConData, G2dLRU] = PrepRealData(Subj);
 brainstormDir = '~/fif_matlab/Brainstorm_db/';
-anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_pial_low_2000V.mat');
-%anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_concat_2000V.mat');
+% anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_pial_low_2000V.mat');
+anatPath = strcat('/home/dmalt/PSIICOS_osadtchii/anat/', Subj,'/tess_cortex_concat_2000V.mat');
+% anatPath = strcat(brainstormDir,'PSIICOS/anat/', Subj,'/tess_cortex_concat_2000V.mat');
 Ctx = load(anatPath);
 gopsiicosFolder = '~/Dropbox/Documents/Education/MEG/Osadchii/gopsiicos/gopsiicos_source'
 
@@ -24,9 +25,9 @@ out = dir(strcat(subjBootstrDir, 'Output_*'));
 numfiles = length(out);
 mydata = cell(1, numfiles);
 for k=1:numfiles
-	mydata{k} = load(strcat(subjBootstrDir, out(k).name));
+    mydata{k} = load(strcat(subjBootstrDir, out(k).name));
     if length(mydata{k}.A) < 100
-    	A = [A,mydata{k}.A];
+        A = [A,mydata{k}.A];
     end
 end
 % B = setdiff(A, unique(A));

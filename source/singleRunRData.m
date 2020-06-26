@@ -1,4 +1,5 @@
 function [X,A] = singleRunRData(Subj)
+% DEPRECATED
 %% Perform single run of go_psiicos for subject Subj
 %
 % FORMAT:

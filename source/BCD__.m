@@ -31,7 +31,7 @@ function [Y, iter]  = BCD__(G, Y_prev, M_, lambda, epsilon, mu)
     % imag(M_)
     % ouy =imag(Y_prev);
     for i = 1:I
-        if v == '2013'
+        if string(v) > "2008"
             s =  randi(S,1,1); %;mod(i,S)%
         elseif v == '2008'
             s = randint(1,1,S) + 1;

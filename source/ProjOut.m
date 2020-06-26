@@ -1,7 +1,7 @@
 function [ Cp ] = ProjOut(CT, CT2, G)
 
 % if(nargin < 3)
-    Rnk  = 350;
+    Rnk  = 500;
 % end;
 
 Ns = size(G, 2) / 2; % two topography columns per each source of the grid
@@ -39,10 +39,18 @@ vecCp  = vecC - Upwr * Upwr' * vecC;
 clear AA A;
 Cp = vecCp;
 if(~isempty(CT2))
+    ReCT2 = real(CT2);
+    ImCT2 = imag(CT2);
+    CT2_cat = [ReCT2, ImCT2];
     Rnk12 = 20;
     CT2  = CT2-Upwr * (Upwr' * CT2);
-    [u2,s2,v2] = svd(CT2,'econ');
-    Cp = Cp-u2(:,1:Rnk12)*(u2(:,1:Rnk12)'*Cp); 
+    [u2,s2,v2] = svd(CT2_cat,'econ');
+    ReCp = real(Cp);
+    Tdim = size(ReCp,2);
+    ImCp = imag(Cp);
+    Cp_cat = [ReCp, ImCp];
+    Cp_cat = Cp_cat-u2(:,1:Rnk12)*(u2(:,1:Rnk12)'*Cp_cat); 
+    Cp_rec = Cp_cat(:,1:Tdim) + j * Cp_cat(:,Tdim+1 : Tdim * 2);
 end;
 % put back in shape
 % Cp = reshape(vecCp, size(C,1), size(C,2));

@@ -29,7 +29,7 @@ function A = ActiveSet(G_small, R_, lambda, w, k, V)
     elseif k ~= 1
         idx = support(w);
         [dummy, S] = size(idx);
-                src_violations(S) = 0; % Memory allocation. 
+        src_violations(S) = 0; % Memory allocation. 
         for s = 1:S
             src_violations(s)  = norm(G_pair(idx(s), G_small, w(idx(s)))' * R, 'fro') - lambda;
         end 
